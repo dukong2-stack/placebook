@@ -77,7 +77,8 @@ h3{font-size:14px;color:var(--muted);font-weight:600;margin:20px 0 8px}
 /* inputs */
 input[type=search],input[type=text],input[type=date],input:not([type]),select,textarea{width:100%;font-size:16px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px;min-width:0}
 select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),linear-gradient(135deg,var(--muted) 50%,transparent 50%);background-position:calc(100% - 17px) 50%,calc(100% - 12px) 50%;background-size:5px 5px;background-repeat:no-repeat;padding-right:30px}
-#sort{width:auto}
+#sort{width:auto;min-width:0;flex:0 1 auto}
+.seg button{white-space:nowrap}
 textarea{resize:vertical;line-height:1.6}
 label{display:block;font-size:13px;color:var(--muted);margin-top:12px}
 label>input,label>select,label>textarea{margin-top:4px;color:var(--ink)}
@@ -160,6 +161,23 @@ label>input,label>select,label>textarea{margin-top:4px;color:var(--ink)}
 .ratings span{font-size:12px;color:var(--muted)}
 .ratings b{font-size:19px}
 .ratings small{font-size:11px;color:var(--muted);font-weight:400}
+.fame{display:flex;flex-wrap:wrap;gap:4px}
+.d-fame{margin-top:12px}
+.fb{font-size:12px;font-weight:600;border-radius:6px;padding:1px 7px;line-height:1.6}
+.d-fame .fb{font-size:13px;padding:3px 9px}
+.fb-m{background:#B3261E;color:#fff}
+.fb-r{background:#1E5AA8;color:#fff}
+.fb-t{background:#0F8A7E;color:#fff}
+.fb-v{background:color-mix(in srgb,#7A4FB5 18%,transparent);color:#7A4FB5;border:1px solid color-mix(in srgb,#7A4FB5 40%,transparent)}
+.ratings.c2{grid-template-columns:1fr 1fr}
+.apps.a3{grid-template-columns:repeat(3,1fr)}
+.reviews{display:grid;gap:8px}
+.rv{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.rv-h{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline;font-size:14px;font-weight:600}
+.rv-h a{color:var(--ink)}
+.rv-w{font-size:12px;color:var(--muted);font-weight:400;margin-left:auto}
+.rv-t{margin:6px 0 0;font-size:14px;line-height:1.65;display:-webkit-box;-webkit-line-clamp:5;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer}
+.rv-t.open{display:block}
 .apps{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .apps .btn{background:var(--card);border:1px solid var(--line);font-weight:500}
 .search{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px}
@@ -215,6 +233,7 @@ label>input,label>select,label>textarea{margin-top:4px;color:var(--ink)}
               <select id="sort" aria-label="정렬">
                 <option value="recent">최근 등록순</option>
                 <option value="visit">최근 방문순</option>
+                <option value="fame">유명한 곳 순</option>
                 <option value="rating">내 별점순</option>
                 <option value="dist">가까운 순</option>
                 <option value="name">이름순</option>
@@ -248,15 +267,11 @@ label>input,label>select,label>textarea{margin-top:4px;color:var(--ink)}
           <div id="catEd"></div>
           <div class="btns"><button class="btn" data-act="addcat">분류 추가</button></div>
 
-          <h2 class="sec">지도·평점 연결</h2>
+          <h2 class="sec">카카오 연결</h2>
           <label>카카오 JavaScript 키
             <input id="s-kakao" type="text" autocomplete="off" spellcheck="false" placeholder="국내 상호 검색용">
           </label>
           <p class="hint">국내 상호·주소 검색에 씁니다. developers.kakao.com에서 앱을 만들고, 앱 설정의 플랫폼 Web에 이 사이트 주소를 등록한 뒤 JavaScript 키를 붙여 넣으세요.</p>
-          <label>구글 Maps API 키 (선택)
-            <input id="s-google" type="text" autocomplete="off" spellcheck="false" placeholder="구글 평점 자동 조회용">
-          </label>
-          <p class="hint">구글 평점과 리뷰 수를 자동으로 가져옵니다. Google Cloud에서 Maps JavaScript API와 Places API (New)를 켜고, 키 사용처를 이 사이트 주소로 제한하세요.</p>
           <div class="btns"><button class="btn primary" data-act="savekeys">키 저장</button></div>
 
           <h2 class="sec">백업</h2>
@@ -386,8 +401,19 @@ function areaOf(p){
   return (pv+' '+(/[시군구]$/.test(t[1]||'')?t[1]:'')).trim();
 }
 const tagsOf=p=>Array.isArray(p.tags)?p.tags:[];
+const MICH={'3':['미쉐린 3스타',100],'2':['미쉐린 2스타',95],'1':['미쉐린 1스타',90],'bib':['미쉐린 빕구르망',75],'sel':['미쉐린 가이드',65]};
+function fameList(p){
+  const f=p.fame||{}, out=[];
+  if(MICH[f.mich])out.push({t:MICH[f.mich][0],s:MICH[f.mich][1],k:'m'});
+  if(f.ribbon>0)out.push({t:'블루리본 '+f.ribbon+'개',s:40+f.ribbon*10,k:'r'});
+  if(f.tmap)out.push({t:'티맵 인기',s:40,k:'t'});
+  if(f.tv)out.push({t:'TV '+f.tv,s:30,k:'v'});
+  return out.sort((a,b)=>b.s-a.s);
+}
+const fameScore=p=>{const l=fameList(p);return l.length?l[0].s*1000+l.reduce((a,x)=>a+x.s,0):0};
+function fameHTML(p){const l=fameList(p);return l.length?`<span class="fame">${l.map(x=>`<span class="fb fb-${x.k}">${esc(x.t)}</span>`).join('')}</span>`:''}
 function parseTags(s){return [...new Set(String(s||'').split(/[,#\s]+/).map(x=>x.trim()).filter(Boolean))]}
-function hay(p){return [p.name,p.address,p.memo,p.sub,cat(p.cat).name,p.kakaoCat,tagsOf(p).join(' '),areaOf(p)].join(' ').toLowerCase()}
+function hay(p){return [p.name,p.address,p.memo,p.sub,cat(p.cat).name,p.kakaoCat,tagsOf(p).join(' '),areaOf(p),fameList(p).map(x=>x.t).join(' '),fameList(p).some(x=>x.k==='m')?'미슐랭':''].join(' ').toLowerCase()}
 function matchQ(p,q){const ts=q.toLowerCase().split(/\s+/).map(t=>t.replace(/^#/,'')).filter(Boolean);if(!ts.length)return true;const h=hay(p);return ts.every(t=>h.includes(t))}
 function tagsHTML(p,btn){const t=tagsOf(p);if(!t.length)return '';return `<span class="tags">${t.map(x=>btn?`<button class="tagb" data-tag="${esc(x)}">#${esc(x)}</button>`:`<span>#${esc(x)}</span>`).join('')}</span>`}
 
@@ -397,7 +423,7 @@ function chipsHTML(){
     S.cats.map(c=>`<button class="chip" data-cat="${esc(c.id)}" aria-pressed="${S.filter.cat===c.id}">${esc(c.emoji)} ${esc(c.name)}</button>`).join('');
 }
 function renderChips(){['#mapChips','#listChips','#nearChips'].forEach(s=>$(s).innerHTML=chipsHTML())}
-function extBadges(p){const e=p.ext||{},a=[];if(e.naver)a.push('네이버 '+esc(e.naver));if(e.kakao)a.push('카카오 '+esc(e.kakao));if(e.google&&e.google.rating)a.push('구글 '+e.google.rating);return a.map(x=>`<span class="ext">${x}</span>`).join('')}
+function extBadges(p){const e=p.ext||{},a=[];if(e.naver)a.push('네이버 '+esc(e.naver));if(e.kakao)a.push('카카오 '+esc(e.kakao));return a.map(x=>`<span class="ext">${x}</span>`).join('')}
 function rowHTML(p,d){
   const c=cat(p.cat);
   if(d==null&&me)d=dist(me,p);
@@ -406,6 +432,7 @@ function rowHTML(p,d){
     <span class="em" style="--c:${esc(c.color)}">${esc(c.emoji)}</span>
     <span class="ri">
       <span class="nm">${esc(p.name)}</span>
+      ${fameHTML(p)}
       <span class="meta"><span>${esc(c.name)}${p.sub?' / '+esc(p.sub):''}</span>${p.status==='wish'?'<span class="tag">가 보고 싶음</span>':''}${p.region==='해외'?'<span class="tag">해외</span>':''}${p.revisit?'<span class="tag">또 가고 싶음</span>':''}</span>
       ${p.address?`<span class="addr">${esc(p.address)}</span>`:''}
       ${stars||ext?`<span class="sc">${stars?`<span class="my">${stars}</span>`:''}${ext}</span>`:''}
@@ -421,7 +448,8 @@ const SORTS={
   rating:(a,b)=>(b.rating||0)-(a.rating||0),
   name:(a,b)=>a.name.localeCompare(b.name,'ko'),
   dist:(a,b)=>me?dist(me,a)-dist(me,b):0,
-  area:(a,b)=>(b.createdAt||0)-(a.createdAt||0)
+  area:(a,b)=>(b.createdAt||0)-(a.createdAt||0),
+  fame:(a,b)=>fameScore(b)-fameScore(a)||(b.rating||0)-(a.rating||0)
 };
 function renderList(){
   const q=($('#q').value||'').trim();
@@ -502,20 +530,25 @@ window.addEventListener('popstate',()=>{if(sheetOpen)closeSheet(true)});
 /* ---------- 상세 ---------- */
 let cur=null;
 function appLinks(p){
-  const nm=p.name.replace(/,/g,' ');
-  const n=encodeURIComponent(nm);
-  const q=encodeURIComponent((p.name+' '+(p.address||'').split(' ').slice(0,3).join(' ')).trim());
+  const n=encodeURIComponent(p.name.replace(/,/g,' '));
   const out=[];
   if(p.region!=='해외'){
-    out.push(`<a class="btn" href="tmap://route?goalname=${n}&goalx=${p.lng}&goaly=${p.lat}">티맵 길안내</a>`);
-    out.push(`<a class="btn" href="nmap://route/car?dlat=${p.lat}&dlng=${p.lng}&dname=${n}&appname=io.github.dukong2stack.placebook">네이버 길안내</a>`);
-    out.push(`<a class="btn" href="https://map.naver.com/p/search/${q}" target="_blank" rel="noopener">네이버 지도·평점</a>`);
-    out.push(`<a class="btn" href="${p.kakaoUrl?esc(p.kakaoUrl):'https://map.kakao.com/link/search/'+n}" target="_blank" rel="noopener">카카오맵·평점</a>`);
-    out.push(`<a class="btn" href="https://map.kakao.com/link/to/${n},${p.lat},${p.lng}" target="_blank" rel="noopener">카카오 길찾기</a>`);
+    out.push(`<a class="btn" href="tmap://route?goalname=${n}&goalx=${p.lng}&goaly=${p.lat}">티맵</a>`);
+    out.push(`<a class="btn" href="nmap://route/car?dlat=${p.lat}&dlng=${p.lng}&dname=${n}&appname=io.github.dukong2stack.placebook">네이버</a>`);
+    out.push(`<a class="btn" href="https://map.kakao.com/link/to/${n},${p.lat},${p.lng}" target="_blank" rel="noopener">카카오</a>`);
+  }else{
+    out.push(`<a class="btn" href="https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}" target="_blank" rel="noopener">구글 길찾기</a>`);
   }
-  const g=p.ext&&p.ext.google;
-  out.push(`<a class="btn" href="${g&&g.url?esc(g.url):'https://www.google.com/maps/search/?api=1&query='+q}" target="_blank" rel="noopener">구글 지도·평점</a>`);
-  if(p.region==='해외')out.push(`<a class="btn" href="https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}" target="_blank" rel="noopener">구글 길찾기</a>`);
+  return out.join('');
+}
+function reviewLinks(p){
+  const q=encodeURIComponent((p.name+' '+(p.region==='해외'?'':(p.address||'').split(' ').slice(0,2).join(' '))).trim());
+  const out=[];
+  if(p.region!=='해외'){
+    out.push(`<a class="btn" href="https://map.naver.com/p/search/${q}" target="_blank" rel="noopener">네이버 리뷰</a>`);
+    out.push(`<a class="btn" href="${p.kakaoUrl?esc(p.kakaoUrl)+'#comment':'https://map.kakao.com/link/search/'+q}" target="_blank" rel="noopener">카카오 리뷰</a>`);
+  }
+  out.push(`<a class="btn" href="https://www.google.com/maps/search/?api=1&query=${q}" target="_blank" rel="noopener">구글 리뷰</a>`);
   return out.join('');
 }
 function openDetail(id){
@@ -526,6 +559,7 @@ function openDetail(id){
       <div><h2 class="nm">${esc(p.name)}</h2>
       <div class="meta"><span>${esc(c.name)}${p.sub?' / '+esc(p.sub):''}</span>${p.region==='해외'?'<span class="tag">해외</span>':''}${d?`<span class="tag">여기서 ${d}</span>`:''}</div></div>
     </div>
+    ${fameHTML(p)?`<div class="d-fame">${fameHTML(p)}</div>`:''}
     <dl class="facts">
       <dt>주소</dt><dd>${esc(p.address||'없음')}</dd>
       <dt>방문</dt><dd>${p.status==='wish'?'가 보고 싶은 곳':'가 봤음'+(p.visited?` (${esc(p.visited)})`:'')}</dd>
@@ -535,16 +569,15 @@ function openDetail(id){
     </dl>
     ${p.memo?`<div class="memo-box">${esc(p.memo).replace(/\n/g,'<br>')}</div>`:''}
     ${tagsOf(p).length?`<div class="d-tags">${tagsHTML(p,true)}</div><p class="hint">키워드를 누르면 같은 키워드의 장소를 모아 봅니다.</p>`:''}
-    <h3>인기 평점</h3>
-    <div class="ratings">
+    <h3>평점·방문자 리뷰</h3>
+    ${p.region!=='해외'?`<div class="ratings c2">
       <div><span>네이버</span><b>${e.naver?esc(e.naver):'–'}</b></div>
       <div><span>카카오</span><b>${e.kakao?esc(e.kakao):'–'}</b></div>
-      <div><span>구글</span><b>${e.google&&e.google.rating?e.google.rating+` <small>${(e.google.count||0).toLocaleString()}명</small>`:'–'}</b></div>
-    </div>
-    <p class="hint">${e.google&&e.google.at?`구글 평점은 ${esc(e.google.at)} 기준입니다. `:''}네이버·카카오 평점은 아래 지도 링크에서 확인한 뒤 ‘수정’에 적어 두면 목록에도 보입니다.</p>
-    <div class="btns"><button class="btn small" data-act="google">구글 평점 ${e.google&&e.google.rating?'다시 ':''}가져오기</button></div>
-    <h3>지도 앱으로 열기</h3>
-    <div class="apps">${appLinks(p)}</div>
+    </div>`:''}
+    <div class="apps a3" style="margin-top:8px">${reviewLinks(p)}</div>
+    <p class="hint">버튼을 누르면 그 지도 앱의 방문자 리뷰 화면이 열립니다. 평점은 거기서 보고 ‘수정’에 적어 두면 목록에도 보입니다.</p>
+    <h3>길안내</h3>
+    <div class="apps a3">${appLinks(p)}</div>
     <div class="btns end"><button class="btn danger" data-act="del">삭제</button><button class="btn" data-act="show">지도에서 보기</button><button class="btn primary" data-act="edit">수정</button></div>
   `);
 }
@@ -618,38 +651,6 @@ async function reverse(lat,lng){
   }catch(e){return null}
 }
 
-/* ---------- 외부 연동: 구글 평점 ---------- */
-let gmP=null;
-window.gm_authFailure=()=>{gmP=null;toast('구글 API 키 인증에 실패했습니다. 키 제한, API 사용 설정, 결제 계정을 확인하세요.')};
-function loadGoogle(){
-  if(gmP)return gmP;
-  const key=S.settings.googleKey;if(!key)return Promise.reject(new Error('nokey'));
-  gmP=new Promise((res,rej)=>{
-    window.__gmInit=()=>res();
-    const s=document.createElement('script');
-    s.src=`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(key)}&v=weekly&loading=async&language=ko&callback=__gmInit`;
-    s.async=true;s.onerror=()=>{gmP=null;s.remove();rej(new Error('load'))};
-    document.head.append(s);
-  });
-  return gmP;
-}
-async function fetchGoogle(p){
-  await loadGoogle();
-  const {Place}=await google.maps.importLibrary('places');
-  const area=p.region==='해외'?'':(p.address||'').split(' ').slice(0,2).join(' ');
-  const {places}=await Place.searchByText({
-    textQuery:(p.name+' '+area).trim(),
-    fields:['displayName','rating','userRatingCount','googleMapsURI'],
-    locationBias:{center:{lat:p.lat,lng:p.lng},radius:500},
-    maxResultCount:1,language:'ko'
-  });
-  if(!places||!places.length)throw new Error('none');
-  const g=places[0];
-  p.ext=p.ext||{};
-  p.ext.google={rating:g.rating??null,count:g.userRatingCount??0,url:g.googleMapsURI||'',name:g.displayName||'',at:new Date().toISOString().slice(0,10)};
-  save();
-}
-
 /* ---------- 등록·수정 폼 ---------- */
 let draft=null, src='kakao', results=[];
 function blank(){return{id:null,name:'',cat:S.filter.cat!=='all'?S.filter.cat:S.cats[0].id,sub:'',region:'국내',address:'',lat:null,lng:null,status:'visited',visited:'',rating:0,tags:[],kakaoCat:'',revisit:false,memo:'',phone:'',kakaoUrl:'',ext:{naver:'',kakao:'',google:null}}}
@@ -681,8 +682,14 @@ function openForm(p,preset){
     <label>키워드<input id="f-tags" type="text" placeholder="예: 물냉면 주차편함 부모님 강릉여행"></label>
     <p class="hint">띄어쓰기나 쉼표로 여러 개를 넣습니다. 나중에 목록에서 키워드로 바로 찾을 수 있습니다.</p>
     <div class="chips" id="f-tagpick"></div>
+    <div class="lbl">유명세 (해당될 때만)</div>
+    <div class="two"><label>미쉐린 가이드<select id="f-mich"><option value="">해당 없음</option><option value="3">3스타</option><option value="2">2스타</option><option value="1">1스타</option><option value="bib">빕구르망</option><option value="sel">가이드 수록</option></select></label>
+      <label>블루리본<select id="f-ribbon"><option value="0">해당 없음</option><option value="1">리본 1개</option><option value="2">리본 2개</option><option value="3">리본 3개</option></select></label></div>
+    <label class="check"><input id="f-tmap" type="checkbox"> 티맵 인기·랭킹 장소</label>
+    <label>TV 방송<input id="f-tv" type="text" placeholder="예: 생활의 달인, 수요미식회"></label>
+    <div class="btns"><button type="button" class="btn small" data-act="famecheck" data-w="naver">네이버에서 확인</button><button type="button" class="btn small" data-act="famecheck" data-w="google">구글에서 확인</button></div>
+    <p class="hint">미쉐린, 블루리본, 방송 출연 여부는 공개된 연동 방법이 없어 자동으로 알 수 없습니다. 위 버튼으로 검색해 보고 골라 두세요.</p>
     <div class="two"><label>네이버 평점<input id="f-naver" type="text" inputmode="decimal" placeholder="예: 4.52"></label><label>카카오 평점<input id="f-kakao" type="text" inputmode="decimal" placeholder="예: 4.1"></label></div>
-    <p class="hint">${S.settings.googleKey?'구글 평점은 저장할 때 자동으로 가져옵니다.':'설정에 구글 API 키를 넣으면 구글 평점을 자동으로 가져옵니다.'}</p>
     <div class="btns end"><button class="btn" data-act="cancel">취소</button><button class="btn primary" data-act="save">저장</button></div>
   `);
   writeForm();setSeg('#srcSeg',src);
@@ -721,6 +728,7 @@ function writeForm(){
   $('#f-visit').value=draft.visited||'';renderStars();
   $('#f-revisit').checked=!!draft.revisit;$('#f-memo').value=draft.memo||'';
   $('#f-tags').value=tagsOf(draft).join(' ');renderTagPick();
+  const f=draft.fame||{};$('#f-mich').value=f.mich||'';$('#f-ribbon').value=String(f.ribbon||0);$('#f-tmap').checked=!!f.tmap;$('#f-tv').value=f.tv||'';
   $('#f-naver').value=draft.ext.naver||'';$('#f-kakao').value=draft.ext.kakao||'';
 }
 function readForm(){
@@ -730,6 +738,7 @@ function readForm(){
   draft.visited=draft.status==='wish'?'':$('#f-visit').value;
   draft.revisit=$('#f-revisit').checked;draft.memo=$('#f-memo').value.trim();
   draft.tags=parseTags($('#f-tags').value);
+  draft.fame={mich:$('#f-mich').value,ribbon:+$('#f-ribbon').value||0,tmap:$('#f-tmap').checked,tv:$('#f-tv').value.trim()};
   draft.ext.naver=$('#f-naver').value.trim();draft.ext.kakao=$('#f-kakao').value.trim();
 }
 function formPin(){const c=cat(draft.cat);return L.divIcon({className:'pin',html:`<span style="--c:${esc(c.color)}"><i>${esc(c.emoji)}</i></span>`,iconSize:[34,34],iconAnchor:[17,41]})}
@@ -825,7 +834,6 @@ function savePlace(){
   const p=draft;save();closeSheet();renderAll();
   map.setView([p.lat,p.lng],Math.max(map.getZoom(),15));
   toast(isNew?'저장했습니다.':'수정했습니다.');
-  if(isNew&&S.settings.googleKey)fetchGoogle(p).then(renderAll).catch(()=>{});
 }
 function addCat(name){const c={id:uid(),name,emoji:'📌',color:'#7A5BA6',subs:[]};const i=S.cats.findIndex(x=>x.id==='etc');S.cats.splice(i<0?S.cats.length:i,0,c);save();renderChips();return c}
 
@@ -851,16 +859,16 @@ $('#sheetBody').addEventListener('click',async e=>{
   if(act==='search')doSearch();
   else if(act==='here')locate().then(m=>{setLoc(m,true);mm&&mm.setView([m.lat,m.lng],17)}).catch(()=>toast('위치를 확인하지 못했습니다. 위치 권한을 허용하세요.'));
   else if(act==='save')savePlace();
+  else if(act==='famecheck'){
+    const nm=$('#f-name').value.trim();if(!nm){toast('이름을 먼저 넣으세요.');return}
+    const area=($('#f-addr').value||'').split(/[\s,]+/).slice(0,2).join(' ');
+    const q=encodeURIComponent(`${nm} ${area} 미쉐린 블루리본 방송`);
+    window.open(a.dataset.w==='naver'?'https://search.naver.com/search.naver?query='+q:'https://www.google.com/search?q='+q,'_blank','noopener');
+  }
   else if(act==='cancel')closeSheet();
   else if(act==='edit'&&p)openForm(p);
   else if(act==='show'&&p){closeSheet();go(0);setTimeout(()=>map.setView([p.lat,p.lng],17),340)}
   else if(act==='del'&&p){if(confirm(`‘${p.name}’을(를) 삭제할까요? 되돌릴 수 없습니다.`)){S.places=S.places.filter(x=>x.id!==p.id);save();closeSheet();renderAll();toast('삭제했습니다.')}}
-  else if(act==='google'&&p){
-    if(!S.settings.googleKey){toast('설정에서 구글 API 키를 넣으면 평점을 가져옵니다.');return}
-    a.disabled=true;a.textContent='구글에서 찾는 중…';
-    try{await fetchGoogle(p);renderAll();openDetail(p.id);toast('구글 평점을 갱신했습니다.')}
-    catch(err){toast(err.message==='none'?'구글에서 이 장소를 찾지 못했습니다.':'구글 평점을 가져오지 못했습니다. 키와 Places API (New) 사용 설정을 확인하세요.');a.disabled=false;a.textContent='구글 평점 가져오기'}
-  }
 });
 $('#sheetBody').addEventListener('change',e=>{
   if(!draft)return;
@@ -880,7 +888,7 @@ $('.scrim').onclick=()=>closeSheet();
 /* ---------- 설정 ---------- */
 function renderSettings(){
   renderCatEd();
-  $('#s-kakao').value=S.settings.kakaoKey;$('#s-google').value=S.settings.googleKey;
+  $('#s-kakao').value=S.settings.kakaoKey;
   const dn=S.places.filter(p=>p.region!=='해외').length;
   $('#stat').textContent=`지금 ${S.places.length}곳이 저장되어 있습니다 (국내 ${dn}곳, 해외 ${S.places.length-dn}곳).`;
 }
@@ -924,10 +932,9 @@ function pageAction(act,el){
     save();renderAll();renderSettings();
   }
   else if(act==='savekeys'){
-    const k=$('#s-kakao').value.trim(), g=$('#s-google').value.trim();
+    const k=$('#s-kakao').value.trim();
     if(k!==S.settings.kakaoKey)kkP=null;
-    if(g!==S.settings.googleKey&&gmP){toast('구글 키를 바꾼 경우 앱을 한 번 새로 열어야 적용됩니다.')}
-    S.settings.kakaoKey=k;S.settings.googleKey=g;save();
+    S.settings.kakaoKey=k;save();
     if(k)loadKakao().then(()=>toast('키를 저장했습니다. 카카오 연결을 확인했습니다.')).catch(()=>toast('키는 저장했지만 카카오에 연결하지 못했습니다. 키와 사이트 도메인 등록을 확인하세요.'));
     else toast('키를 저장했습니다.');
   }
