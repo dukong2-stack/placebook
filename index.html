@@ -294,6 +294,7 @@ label>input,label>select,label>textarea{margin-top:4px;color:var(--ink)}
             <label class="btn" style="margin:0;color:var(--ink);font-size:15px">파일 가져오기<input type="file" id="imp" accept="application/json,.json" hidden></label>
           </div>
           <p class="hint" id="stat"></p>
+          <p class="hint">앱 버전 2026.11.12 (v8)</p>
         </div>
       </section>
     </div>
@@ -347,23 +348,33 @@ function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('
 const cat=id=>S.cats.find(c=>c.id===id)||S.cats.find(c=>c.id==='etc')||S.cats[S.cats.length-1];
 
 let toastT;
-function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),2600)}
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove('show'),m.length>40?6000:2600)}
 
 /* ---------- 위치 ---------- */
 let me=null, meMarker=null;
 function dist(a,b){const R=6371e3,t=Math.PI/180,dLa=(b.lat-a.lat)*t,dLo=(b.lng-a.lng)*t;const x=Math.sin(dLa/2)**2+Math.cos(a.lat*t)*Math.cos(b.lat*t)*Math.sin(dLo/2)**2;return 2*R*Math.asin(Math.sqrt(x))}
 const fmtD=m=>m<1000?Math.round(m/10)*10+'m':m<100000?(m/1000).toFixed(1)+'km':Math.round(m/1000).toLocaleString()+'km';
-function locate(){
-  return new Promise((res,rej)=>{
-    if(!navigator.geolocation)return rej(new Error('unsupported'));
-    navigator.geolocation.getCurrentPosition(p=>{
-      me={lat:p.coords.latitude,lng:p.coords.longitude};
-      if(!meMarker)meMarker=L.circleMarker([me.lat,me.lng],{radius:8,color:'#fff',weight:3,fillColor:'#2F80ED',fillOpacity:1}).addTo(map);
-      else meMarker.setLatLng([me.lat,me.lng]);
-      renderList();renderNear();res(me);
-    },rej,{enableHighAccuracy:true,timeout:12000,maximumAge:60000});
-  });
+let locErr='';
+function geoOnce(high,timeout){
+  return new Promise((res,rej)=>navigator.geolocation.getCurrentPosition(res,rej,{enableHighAccuracy:high,timeout,maximumAge:high?60000:300000}));
 }
+async function locate(){
+  if(!('geolocation' in navigator)){locErr='이 브라우저는 위치 기능을 지원하지 않습니다.';throw new Error(locErr)}
+  let pos;
+  try{pos=await geoOnce(true,10000)}
+  catch(e){
+    if(e.code===1){locErr='위치 권한이 막혀 있습니다. 폰 설정 → 애플리케이션 → Chrome → 권한 → 위치를 ‘앱 사용 중에만 허용’으로 바꾸고, 크롬 주소창 왼쪽 아이콘에서도 위치를 허용하세요.';throw e}
+    try{pos=await geoOnce(false,15000)}
+    catch(e2){locErr=e2.code===1?'위치 권한이 막혀 있습니다. 폰 설정에서 Chrome의 위치 권한을 허용하세요.':'위치를 잡지 못했습니다. 폰의 위치(GPS)가 켜져 있는지 확인하고, 실내라면 잠시 뒤 다시 시도하세요.';throw e2}
+  }
+  locErr='';
+  me={lat:pos.coords.latitude,lng:pos.coords.longitude};
+  if(!meMarker)meMarker=L.circleMarker([me.lat,me.lng],{radius:8,color:'#fff',weight:3,fillColor:'#2F80ED',fillOpacity:1}).addTo(map);
+  else meMarker.setLatLng([me.lat,me.lng]);
+  renderList();renderNear();
+  return me;
+}
+const locFail=()=>toast(locErr||'위치를 확인하지 못했습니다.');
 
 /* ---------- 지도 ---------- */
 const map=L.map('map',{zoomControl:false}).setView([37.5665,126.978],11);
@@ -404,7 +415,7 @@ function renderMap(fit){
   if(fit&&ps.length)map.fitBounds(L.latLngBounds(ps.map(p=>[p.lat,p.lng])),{padding:[50,50],maxZoom:15});
 }
 map.on('contextmenu',e=>openForm(null,{lat:e.latlng.lat,lng:e.latlng.lng}));
-$('#btnLocate').onclick=()=>locate().then(m=>map.setView([m.lat,m.lng],15)).catch(()=>toast('위치를 확인하지 못했습니다. 브라우저의 위치 권한을 허용하세요.'));
+$('#btnLocate').onclick=()=>locate().then(m=>map.setView([m.lat,m.lng],15)).catch(()=>locFail());
 
 /* ---------- 탭 ---------- */
 let tab=0;
@@ -827,7 +838,7 @@ async function loadHere(){
   const box=$('#here');if(!box)return;
   box.innerHTML='<p class="hint">지금 위치를 확인하는 중…</p>';
   let m;
-  try{m=await locate()}catch(e){if($('#here'))box.innerHTML='<p class="hint">위치 권한을 허용하면 지금 있는 가게가 여기에 바로 뜹니다. 아래에서 검색해도 됩니다.</p>';return}
+  try{m=await locate()}catch(e){if($('#here'))box.innerHTML=`<p class="hint">${esc(locErr||'위치를 확인하지 못했습니다.')} 아래에서 상호로 검색해도 됩니다.</p>`;return}
   if(!draft||!$('#here'))return;
   if(draft.lat==null){setLoc(m,true);mm&&mm.setView([m.lat,m.lng],17)}
   if(!S.settings.kakaoKey){box.innerHTML='<p class="hint">지금 위치를 핀으로 넣었습니다. 설정에 카카오 키를 넣으면 주변 가게 목록이 여기에 바로 떠서 한 번에 고를 수 있습니다.</p>';return}
@@ -908,7 +919,7 @@ $('#sheetBody').addEventListener('click',async e=>{
   const a=e.target.closest('[data-act]');if(!a)return;
   const act=a.dataset.act, p=S.places.find(x=>x.id===cur);
   if(act==='search')doSearch();
-  else if(act==='here')locate().then(m=>{setLoc(m,true);mm&&mm.setView([m.lat,m.lng],17)}).catch(()=>toast('위치를 확인하지 못했습니다. 위치 권한을 허용하세요.'));
+  else if(act==='here')locate().then(m=>{setLoc(m,true);mm&&mm.setView([m.lat,m.lng],17)}).catch(()=>locFail());
   else if(act==='save')savePlace();
   else if(act==='share'&&p){
     if(p.memo)$('#shareBox').innerHTML=`<div class="share-pick"><span>메모도 함께 보낼까요?</span><button class="btn small" data-act="share1">장소만</button><button class="btn small primary" data-act="share2">메모까지</button></div>`;
@@ -974,7 +985,7 @@ function pageAction(act,el){
     setTimeout(()=>{map.fitBounds(L.latLngBounds(listShown.map(p=>[p.lat,p.lng])),{padding:[60,60],maxZoom:15})},340);
     return;
   }
-  if(act==='locate'){locate().then(()=>renderNear()).catch(()=>toast('위치를 확인하지 못했습니다. 브라우저의 위치 권한을 허용하세요.'))}
+  if(act==='locate'){locate().then(()=>renderNear()).catch(()=>locFail())}
   else if(act==='addcat'){addCat('새 분류');renderCatEd();const rows=$$('.cat-row');const last=rows[rows.length-2]||rows[rows.length-1];last&&$('.ce-name',last).select()}
   else if(act==='delcat'){
     const id=el.closest('.cat-row').dataset.cid;
