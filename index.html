@@ -369,7 +369,7 @@ function locate(){
 const map=L.map('map',{zoomControl:false}).setView([37.5665,126.978],11);
 const ESRI='https://server.arcgisonline.com/ArcGIS/rest/services/';
 const BASES={
-  basic:{name:'일반',desc:'깔끔한 기본 지도',make:()=>[L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{subdomains:'abcd',maxZoom:20,attribution:'&copy; OpenStreetMap &copy; CARTO'})]},
+  basic:{name:'일반',desc:'깔끔한 기본 지도',make:()=>[L.tileLayer(ESRI+'World_Street_Map/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,maxNativeZoom:18,attribution:'Esri, HERE, Garmin, OpenStreetMap'})]},
   detail:{name:'상세',desc:'길·건물이 자세한 지도',make:()=>[L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; OpenStreetMap'})]},
   sat:{name:'위성',desc:'위성 사진 + 도로·지명',make:()=>[
     L.tileLayer(ESRI+'World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,maxNativeZoom:18,attribution:'Esri, Maxar, Earthstar'}),
@@ -382,6 +382,8 @@ let baseLayers=[];
 function applyBase(){
   baseLayers.forEach(l=>map.removeLayer(l));
   baseLayers=BASES[baseKey()].make();baseLayers.forEach(l=>l.addTo(map));
+  let errs=0;
+  if(baseKey()!=='detail')baseLayers[0].on('tileerror',()=>{if(++errs===6){S.settings.mapType='detail';save();applyBase();toast('이 지도를 불러오지 못해 ‘상세’ 지도로 바꿨습니다.')}});
   $('#layerMenu').innerHTML=Object.entries(BASES).map(([k,v])=>`<button data-base="${k}" aria-pressed="${k===baseKey()}"><b>${v.name}</b><span>${v.desc}</span></button>`).join('');
 }
 applyBase();
