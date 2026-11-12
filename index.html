@@ -305,7 +305,7 @@ label>input,label>select,label>textarea{margin-top:4px;color:var(--ink)}
             <label class="btn" style="margin:0;color:var(--ink);font-size:15px">파일 가져오기<input type="file" id="imp" accept="application/json,.json" hidden></label>
           </div>
           <p class="hint" id="stat"></p>
-          <p class="hint">앱 버전 2026.11.12 (v12)</p>
+          <p class="hint">앱 버전 2026.11.12 (v13)</p>
         </div>
       </section>
     </div>
@@ -396,6 +396,30 @@ const LBASES={
     L.tileLayer(ESRI+'Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,maxNativeZoom:17})],
   terrain:()=>[L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{subdomains:'abc',maxZoom:19,maxNativeZoom:17,attribution:'&copy; OpenTopoMap'})]
 };
+/* 한글 지명 세계지도 (키 필요 없음: OpenFreeMap 벡터 지도 + MapLibre) */
+const OFM_STYLE='https://tiles.openfreemap.org/styles/liberty';
+let mlP=null;
+function loadML(){
+  if(mlP)return mlP;
+  const add=(src)=>new Promise((res,rej)=>{const s=document.createElement('script');s.src=src;s.onload=res;s.onerror=rej;document.head.append(s)});
+  const css=document.createElement('link');css.rel='stylesheet';css.href='https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.css';document.head.append(css);
+  mlP=add('https://cdn.jsdelivr.net/npm/maplibre-gl@4.7.1/dist/maplibre-gl.js')
+    .then(()=>add('https://cdn.jsdelivr.net/npm/@maplibre/maplibre-gl-leaflet@0.1.4/leaflet-maplibre-gl.js'))
+    .then(()=>{if(!L.maplibreGL)throw new Error('plugin')})
+    .catch(e=>{mlP=null;throw e});
+  return mlP;
+}
+function koreanize(gm){
+  const run=()=>{
+    (gm.getStyle().layers||[]).forEach(ly=>{
+      const tf=ly.layout&&ly.layout['text-field'];
+      if(ly.type==='symbol'&&tf&&JSON.stringify(tf).includes('name')){
+        try{gm.setLayoutProperty(ly.id,'text-field',['coalesce',['get','name:ko'],['get','name']])}catch(e){}
+      }
+    });
+  };
+  if(gm.isStyleLoaded())run();else gm.once('load',run);
+}
 const baseKey=()=>['basic','sat','terrain'].includes(S.settings.mapType)?S.settings.mapType:'basic';
 
 function leafletMap(el,{lat,lng,z,mini}){
@@ -418,10 +442,19 @@ function leafletMap(el,{lat,lng,z,mini}){
     onLong:cb=>m.on('contextmenu',ev=>cb(ev.latlng.lat,ev.latlng.lng)),
     base:k=>{
       bl.forEach(l=>m.removeLayer(l));bl=(LBASES[k]||LBASES.basic)();bl.forEach(l=>l.addTo(m));
+      const tok={};api._tok=tok;
+      if(k==='basic')loadML().then(()=>{
+        if(api._tok!==tok||api._dead)return;
+        const v=L.maplibreGL({style:OFM_STYLE,attribution:'&copy; OpenFreeMap &copy; OpenStreetMap'});
+        v.addTo(m);
+        const gm=v.getMaplibreMap();koreanize(gm);
+        const old=bl;bl=[v];
+        gm.once('load',()=>old.forEach(l=>m.removeLayer(l)));
+      }).catch(()=>{});
       let errs=0;
       if(k!=='basic'&&!mini)bl[0].on('tileerror',()=>{if(++errs===8){S.settings.mapType='basic';save();api.base('basic');renderLayerMenu();toast('이 지도를 불러오지 못해 ‘일반’ 지도로 바꿨습니다.')}});
     },
-    destroy:()=>{m.remove();el.className='';el.innerHTML=''}
+    destroy:()=>{api._dead=true;m.remove();el.className='';el.innerHTML=''}
   };
   return api;
 }
@@ -507,7 +540,7 @@ function drawMe(){
 }
 function renderLayerMenu(){
   const nv=map&&map.engine==='naver';
-  const D={basic:['일반',nv?'네이버 기본 지도':'기본 지도 (OpenStreetMap)'],sat:['위성','위성 사진 + 도로·지명'],terrain:['지형','산·등고선 (등산, 절경)']};
+  const D={basic:['일반',nv?'네이버 기본 지도':'한글 지명 지도'],sat:['위성','위성 사진 + 도로·지명'],terrain:['지형','산·등고선 (등산, 절경)']};
   $('#layerMenu').innerHTML=(naverOK?`<div class="seg full lm-eng"><button data-eng="naver" aria-pressed="${!worldMode}">네이버 지도</button><button data-eng="world" aria-pressed="${worldMode}">세계지도</button></div>`:'')+
     Object.entries(D).map(([k,v])=>`<button data-base="${k}" aria-pressed="${k===baseKey()}"><b>${v[0]}</b><span>${v[1]}</span></button>`).join('')+
     `<p class="lm-note">${naverOK?(worldMode?'세계지도는 해외 장소를 볼 때 쓰세요':'네이버 지도는 국내 위주로 보여 줍니다'):'네이버 지도는 설정에서 연결할 수 있습니다'}</p>`;
