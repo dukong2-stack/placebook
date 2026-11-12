@@ -58,6 +58,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 .pin{background:none;border:0}
 .pin-wrap{background:none;border:0}
 .me-dot{width:18px;height:18px;border-radius:50%;background:#2F80ED;border:3px solid #fff;box-shadow:0 0 0 6px rgba(47,128,237,.22),0 1px 4px rgba(0,0,0,.3)}
+.lm-eng{margin:2px 2px 6px}
+.lm-eng button{padding:7px 8px}
 .lm-note{font-size:11px;color:var(--muted);margin:4px 10px 4px;line-height:1.4}
 .pin span{display:grid;place-items:center;width:34px;height:34px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);background:var(--c);border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35)}
 .pin span i{transform:rotate(45deg);font-style:normal;font-size:16px;line-height:1}
@@ -303,7 +305,7 @@ label>input,label>select,label>textarea{margin-top:4px;color:var(--ink)}
             <label class="btn" style="margin:0;color:var(--ink);font-size:15px">파일 가져오기<input type="file" id="imp" accept="application/json,.json" hidden></label>
           </div>
           <p class="hint" id="stat"></p>
-          <p class="hint">앱 버전 2026.11.12 (v11)</p>
+          <p class="hint">앱 버전 2026.11.12 (v12)</p>
         </div>
       </section>
     </div>
@@ -476,7 +478,13 @@ function loadNaver(){
   return nvP;
 }
 let map=null, meH=null, pinHs=[];
-const makeMap=(el,o)=>(naverOK?naverMap:leafletMap)(el,o);
+let worldMode=false;
+const makeMap=(el,o)=>(naverOK&&!worldMode?naverMap:leafletMap)(el,o);
+const inKorea=p=>p.lat>32.5&&p.lat<39.5&&p.lng>123.5&&p.lng<132.5;
+function setWorldMode(on){
+  if(worldMode===on)return;
+  worldMode=on;buildMain();renderMap(false);
+}
 function buildMain(){
   const c=map?map.center():{lat:37.5665,lng:126.978}, z=map?map.zoom():11;
   if(map)map.destroy();
@@ -500,16 +508,29 @@ function drawMe(){
 function renderLayerMenu(){
   const nv=map&&map.engine==='naver';
   const D={basic:['일반',nv?'네이버 기본 지도':'기본 지도 (OpenStreetMap)'],sat:['위성','위성 사진 + 도로·지명'],terrain:['지형','산·등고선 (등산, 절경)']};
-  $('#layerMenu').innerHTML=Object.entries(D).map(([k,v])=>`<button data-base="${k}" aria-pressed="${k===baseKey()}"><b>${v[0]}</b><span>${v[1]}</span></button>`).join('')+
-    `<p class="lm-note">${nv?'네이버 지도 사용 중':'네이버 지도는 설정에서 연결할 수 있습니다'}</p>`;
+  $('#layerMenu').innerHTML=(naverOK?`<div class="seg full lm-eng"><button data-eng="naver" aria-pressed="${!worldMode}">네이버 지도</button><button data-eng="world" aria-pressed="${worldMode}">세계지도</button></div>`:'')+
+    Object.entries(D).map(([k,v])=>`<button data-base="${k}" aria-pressed="${k===baseKey()}"><b>${v[0]}</b><span>${v[1]}</span></button>`).join('')+
+    `<p class="lm-note">${naverOK?(worldMode?'세계지도는 해외 장소를 볼 때 쓰세요':'네이버 지도는 국내 위주로 보여 줍니다'):'네이버 지도는 설정에서 연결할 수 있습니다'}</p>`;
 }
 $('#btnLayer').onclick=()=>{const m=$('#layerMenu');m.hidden=!m.hidden;$('#btnLayer').setAttribute('aria-expanded',String(!m.hidden))};
-$('#layerMenu').onclick=e=>{const b=e.target.closest('[data-base]');if(!b)return;S.settings.mapType=b.dataset.base;save();map.base(baseKey());renderLayerMenu();$('#layerMenu').hidden=true;$('#btnLayer').setAttribute('aria-expanded','false')};
+$('#layerMenu').onclick=e=>{
+  const g=e.target.closest('[data-eng]');
+  if(g){const c=map.center(),z=map.zoom();setWorldMode(g.dataset.eng==='world');if(worldMode&&z>6)map.setView(c.lat,c.lng,z);$('#layerMenu').hidden=true;return}
+  const b=e.target.closest('[data-base]');if(!b)return;S.settings.mapType=b.dataset.base;save();map.base(baseKey());renderLayerMenu();$('#layerMenu').hidden=true;$('#btnLayer').setAttribute('aria-expanded','false')};
 let fitStep=0;
 $('#btnFit').onclick=()=>{
   const ps=S.places.filter(p=>S.filter.cat==='all'||p.cat===S.filter.cat);
-  if(fitStep===0&&ps.length){map.fit(ps.map(p=>[p.lat,p.lng]),15);fitStep=1;toast('등록한 곳 전체입니다. 한 번 더 누르면 세계지도로 봅니다.')}
-  else{map.setView(30,127,2);fitStep=0;toast('세계지도입니다. 다시 누르면 등록한 곳 전체로 돌아갑니다.')}
+  if(fitStep===0&&worldMode&&naverOK&&ps.every(inKorea))setWorldMode(false);
+  if(fitStep===0&&ps.length){
+    // 네이버 지도는 해외를 넓게 못 보여 주므로, 해외 장소가 섞여 있으면 세계지도로 전환
+    if(naverOK&&!ps.every(inKorea))setWorldMode(true);
+    else if(naverOK&&ps.every(inKorea))setWorldMode(false);
+    map.fit(ps.map(p=>[p.lat,p.lng]),15);fitStep=1;
+    toast('등록한 곳 전체입니다. 한 번 더 누르면 세계지도로 봅니다.');
+  }else{
+    setWorldMode(true);map.setView(30,127,2);fitStep=0;
+    toast(naverOK?'세계지도입니다. 한 번 더 누르거나 지도 종류 버튼에서 ‘네이버 지도’를 고르면 돌아갑니다.':'세계지도입니다. 다시 누르면 등록한 곳 전체로 돌아갑니다.');
+  }
 };
 const pinHTML=p=>{const c=cat(p.cat);return `<div class="pin${p.status==='wish'?' wish':''}"><span style="--c:${esc(c.color)}"><i>${esc(c.emoji)}</i></span></div>`};
 function renderMap(fit){
