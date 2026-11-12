@@ -303,7 +303,7 @@ label>input,label>select,label>textarea{margin-top:4px;color:var(--ink)}
             <label class="btn" style="margin:0;color:var(--ink);font-size:15px">파일 가져오기<input type="file" id="imp" accept="application/json,.json" hidden></label>
           </div>
           <p class="hint" id="stat"></p>
-          <p class="hint">앱 버전 2026.11.12 (v10)</p>
+          <p class="hint">앱 버전 2026.11.12 (v11)</p>
         </div>
       </section>
     </div>
@@ -397,7 +397,7 @@ const LBASES={
 const baseKey=()=>['basic','sat','terrain'].includes(S.settings.mapType)?S.settings.mapType:'basic';
 
 function leafletMap(el,{lat,lng,z,mini}){
-  const m=L.map(el,{zoomControl:false,attributionControl:!mini,maxZoom:19}).setView([lat,lng],z);
+  const m=L.map(el,{zoomControl:false,attributionControl:!mini,maxZoom:19,minZoom:1,worldCopyJump:true}).setView([lat,lng],z);
   let bl=[];
   const icon=o=>L.divIcon({className:'pin-wrap',html:o.h,iconSize:o.size||[34,34],iconAnchor:o.anchor||[17,41]});
   const api={engine:'leaflet',
@@ -426,7 +426,7 @@ function leafletMap(el,{lat,lng,z,mini}){
 
 function naverMap(el,{lat,lng,z,mini}){
   const N=naver.maps;
-  const m=new N.Map(el,{center:new N.LatLng(lat,lng),zoom:z,mapTypeId:N.MapTypeId.NORMAL,zoomControl:false,scaleControl:false,mapDataControl:false,logoControlOptions:{position:N.Position.BOTTOM_LEFT}});
+  const m=new N.Map(el,{center:new N.LatLng(lat,lng),zoom:z,minZoom:1,mapTypeId:N.MapTypeId.NORMAL,zoomControl:false,scaleControl:false,mapDataControl:false,logoControlOptions:{position:N.Position.BOTTOM_LEFT}});
   const TYPES={basic:N.MapTypeId.NORMAL,sat:N.MapTypeId.HYBRID,terrain:N.MapTypeId.TERRAIN};
   if(!mini){el.style.position='absolute';el.style.inset='0'}
   el.style.width='100%';el.style.height=mini?'200px':'100%';
@@ -505,10 +505,11 @@ function renderLayerMenu(){
 }
 $('#btnLayer').onclick=()=>{const m=$('#layerMenu');m.hidden=!m.hidden;$('#btnLayer').setAttribute('aria-expanded',String(!m.hidden))};
 $('#layerMenu').onclick=e=>{const b=e.target.closest('[data-base]');if(!b)return;S.settings.mapType=b.dataset.base;save();map.base(baseKey());renderLayerMenu();$('#layerMenu').hidden=true;$('#btnLayer').setAttribute('aria-expanded','false')};
+let fitStep=0;
 $('#btnFit').onclick=()=>{
   const ps=S.places.filter(p=>S.filter.cat==='all'||p.cat===S.filter.cat);
-  if(!ps.length){toast('지도에 보일 장소가 없습니다.');return}
-  map.fit(ps.map(p=>[p.lat,p.lng]),15);
+  if(fitStep===0&&ps.length){map.fit(ps.map(p=>[p.lat,p.lng]),15);fitStep=1;toast('등록한 곳 전체입니다. 한 번 더 누르면 세계지도로 봅니다.')}
+  else{map.setView(30,127,2);fitStep=0;toast('세계지도입니다. 다시 누르면 등록한 곳 전체로 돌아갑니다.')}
 };
 const pinHTML=p=>{const c=cat(p.cat);return `<div class="pin${p.status==='wish'?' wish':''}"><span style="--c:${esc(c.color)}"><i>${esc(c.emoji)}</i></span></div>`};
 function renderMap(fit){
