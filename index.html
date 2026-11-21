@@ -311,7 +311,7 @@ label>input,label>select,label>textarea{margin-top:4px;color:var(--ink)}
             <label class="btn" style="margin:0;color:var(--ink);font-size:15px">파일 가져오기<input type="file" id="imp" accept="application/json,.json" hidden></label>
           </div>
           <p class="hint" id="stat"></p>
-          <p class="hint">앱 버전 2026.11.12 (v14)</p>
+          <p class="hint">앱 버전 2026.11.21 (v15)</p>
         </div>
       </section>
     </div>
@@ -818,8 +818,14 @@ function appLinks(p){
     out.push(`<a class="btn" href="tmap://route?goalname=${n}&goalx=${p.lng}&goaly=${p.lat}">티맵</a>`);
     out.push(`<a class="btn" href="nmap://route/car?dlat=${p.lat}&dlng=${p.lng}&dname=${n}&appname=io.github.dukong2stack.placebook">네이버</a>`);
     out.push(`<a class="btn" href="https://map.kakao.com/link/to/${n},${p.lat},${p.lng}" target="_blank" rel="noopener">카카오</a>`);
+  }
+  const g=(mode,nav)=>`https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}&travelmode=${mode}${nav?'&dir_action=navigate':''}`;
+  if(p.region==='해외'){
+    out.push(`<a class="btn" href="${g('driving',true)}" target="_blank" rel="noopener">구글 내비</a>`);
+    out.push(`<a class="btn" href="${g('walking',true)}" target="_blank" rel="noopener">구글 도보</a>`);
+    out.push(`<a class="btn" href="${g('transit',false)}" target="_blank" rel="noopener">구글 대중교통</a>`);
   }else{
-    out.push(`<a class="btn" href="https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}" target="_blank" rel="noopener">구글 길찾기</a>`);
+    out.push(`<a class="btn" href="${g('transit',false)}" target="_blank" rel="noopener">구글 길찾기</a>`);
   }
   return out.join('');
 }
