@@ -168,7 +168,10 @@ label>input,label>select,label>textarea{margin-top:4px;color:var(--ink)}
 
 /* 내 주변 */
 #p-near{overflow:hidden}
+#nearRot{position:absolute;left:0;top:0;width:100%;height:100%;transform-origin:50% 50%;transition:transform .2s linear}
 #nearMap{position:absolute;inset:0}
+.upr{transform:rotate(var(--hd,0deg));transform-origin:17px 41px}
+#needle{transition:transform .2s linear}
 .nsheet{position:absolute;left:0;right:0;top:46%;bottom:0;z-index:1100;background:var(--paper);border-radius:22px 22px 0 0;box-shadow:0 -8px 24px rgba(0,0,0,.28);display:flex;flex-direction:column}
 .ns-head{padding:4px 16px 10px;touch-action:none;cursor:grab}
 .ns-head .grab{margin:6px auto 10px;width:44px;height:5px;border-radius:3px;background:var(--line);cursor:pointer}
@@ -176,14 +179,14 @@ label>input,label>select,label>textarea{margin-top:4px;color:var(--ink)}
 .ns-head .ph .btn{margin-left:auto}
 .ns-head .chips+.chips{margin-top:8px}
 .ns-body{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:4px 16px 110px;overscroll-behavior:contain}
-.nlabel{position:absolute;z-index:1050;left:12px;top:12px;font-size:12px;font-weight:600;color:var(--ink);background:color-mix(in srgb,var(--paper) 85%,transparent);border:1px solid var(--line);padding:5px 10px;border-radius:10px}
+.nlabel{display:flex;flex-direction:column;gap:1px;max-width:calc(100% - 90px);position:absolute;z-index:1050;left:12px;top:12px;font-size:12px;font-weight:600;color:var(--ink);background:color-mix(in srgb,var(--paper) 85%,transparent);border:1px solid var(--line);padding:5px 10px;border-radius:10px}
 .nlabel[hidden]{display:none}
-.nN{position:absolute;z-index:1050;right:28px;top:60px;font-size:11px;font-weight:700;color:#F08A6C;pointer-events:none}
 .nzoom{position:absolute;z-index:1050;right:12px;display:flex;flex-direction:column;border-radius:14px;overflow:hidden;border:1px solid var(--line);background:var(--card);box-shadow:0 2px 8px rgba(0,0,0,.25)}
 .nzoom button{width:44px;height:44px;border:0;background:none;color:var(--ink);display:grid;place-items:center;cursor:pointer}
 .nzoom button+button{border-top:1px solid var(--line)}
 #nMe{left:12px;color:#4F86E8}
 #nCompass,#nMe{z-index:1050}
+.nlabel small{font-size:11px;font-weight:400;color:var(--muted)}
 .me-wrap{position:relative;width:64px;height:64px}
 .me-wrap .me-dot{position:absolute;left:23px;top:23px}
 .me-cone{position:absolute;inset:0;border-radius:50%;background:conic-gradient(from -28deg,rgba(79,134,232,.42) 0 56deg,transparent 56deg)}
@@ -319,12 +322,11 @@ label>input,label>select,label>textarea{margin-top:4px;color:var(--ink)}
       </section>
 
       <section class="page" id="p-near" aria-label="내 주변">
-        <div id="nearMap"></div>
-        <span class="nlabel" id="headLbl" hidden></span>
+        <div id="nearRot"><div id="nearMap"></div></div>
+        <span class="nlabel" id="headLbl" hidden><b id="hl1"></b><small id="hl2"></small></span>
         <button class="round nctl" id="nCompass" style="top:12px;right:12px" aria-label="보는 방향 표시 켜기">
-          <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><path d="M13 3 L17 13 L13 11.5 L9 13 Z" fill="#F08A6C"/><path d="M13 23 L9 13 L13 14.5 L17 13 Z" fill="#7E8C85"/></svg>
+          <svg id="needle" width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><text x="15" y="7.5" text-anchor="middle" font-size="7" font-weight="700" fill="#F08A6C" font-family="sans-serif">N</text><path d="M15 9 L18.5 16 L15 14.8 L11.5 16 Z" fill="#F08A6C"/><path d="M15 25 L11.5 16 L15 17.2 L18.5 16 Z" fill="#7E8C85"/></svg>
         </button>
-        <span class="nN">N</span>
         <div class="nzoom nctl" id="nZoom"><button id="nZin" aria-label="확대"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button><button id="nZout" aria-label="축소"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg></button></div>
         <button class="round nctl" id="nMe" aria-label="내 위치로"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M3 11 21 3l-8 18-2-8-8-2Z"/></svg></button>
         <div class="nsheet" id="nSheet">
@@ -379,7 +381,7 @@ label>input,label>select,label>textarea{margin-top:4px;color:var(--ink)}
             <label class="btn" style="margin:0;color:var(--ink);font-size:15px">파일 가져오기<input type="file" id="imp" accept="application/json,.json" hidden></label>
           </div>
           <p class="hint" id="stat"></p>
-          <p class="hint">앱 버전 2026.11.22 (v30)</p>
+          <p class="hint">앱 버전 2026.11.22 (v31)</p>
         </div>
       </section>
     </div>
@@ -513,12 +515,12 @@ function koreanize(gm){
 const baseKey=()=>['basic','sat','terrain'].includes(S.settings.mapType)?S.settings.mapType:'basic';
 
 function leafletMap(el,{lat,lng,z,mini}){
-  const m=L.map(el,{zoomControl:false,attributionControl:!mini,maxZoom:19,minZoom:1,worldCopyJump:true}).setView([lat,lng],z);
+  const m=L.map(el,{zoomControl:false,attributionControl:!mini,maxZoom:19,minZoom:1,worldCopyJump:true,zoomSnap:0.25}).setView([lat,lng],z);
   let bl=[];
   const icon=o=>L.divIcon({className:'pin-wrap',html:o.h,iconSize:o.size||[34,34],iconAnchor:o.anchor||[17,41]});
   const api={engine:'leaflet',
     setView:(a,b,zz)=>m.setView([a,b],zz??m.getZoom()),
-    fit:(pts,maxZ)=>{if(pts.length)m.fitBounds(L.latLngBounds(pts),{padding:[50,50],maxZoom:maxZ})},
+    fit:(pts,maxZ,pad=50)=>{if(pts.length)m.fitBounds(L.latLngBounds(pts),{padding:[pad,pad],maxZoom:maxZ})},
     center:()=>{const c=m.getCenter();return{lat:c.lat,lng:c.lng}},
     zoom:()=>m.getZoom(),
     resize:()=>m.invalidateSize(),
@@ -560,12 +562,12 @@ function naverMap(el,{lat,lng,z,mini}){
   const LL=(a,b)=>new N.LatLng(a,b);
   return {engine:'naver',
     setView:(a,b,zz)=>{if(zz!=null)m.setZoom(zz,false);m.setCenter(LL(a,b))},
-    fit:(pts,maxZ)=>{
+    fit:(pts,maxZ,pad)=>{
       if(!pts.length)return;
       if(pts.length===1){m.setZoom(maxZ,false);m.setCenter(LL(pts[0][0],pts[0][1]));return}
       const bd=new N.LatLngBounds(LL(pts[0][0],pts[0][1]),LL(pts[0][0],pts[0][1]));
       pts.forEach(q=>bd.extend(LL(q[0],q[1])));
-      m.fitBounds(bd,{top:70,right:60,bottom:70,left:50});
+      m.fitBounds(bd,pad!=null?{top:pad,right:pad,bottom:pad,left:pad}:{top:70,right:60,bottom:70,left:50});
       N.Event.once(m,'idle',()=>{if(m.getZoom()>maxZ)m.setZoom(maxZ)});
     },
     center:()=>{const c=m.getCenter();return{lat:c.lat(),lng:c.lng()}},
@@ -647,11 +649,11 @@ function googleMap(el,{lat,lng,z}){
   }
   return {engine:'google',
     setView:(a,b,zz)=>{m.setCenter({lat:a,lng:b});if(zz!=null)m.setZoom(zz)},
-    fit:(pts,maxZ)=>{
+    fit:(pts,maxZ,pad)=>{
       if(!pts.length)return;
       if(pts.length===1){m.setCenter({lat:pts[0][0],lng:pts[0][1]});m.setZoom(maxZ);return}
       const bd=new G.LatLngBounds();pts.forEach(q=>bd.extend({lat:q[0],lng:q[1]}));
-      m.fitBounds(bd,60);
+      m.fitBounds(bd,pad!=null?pad:60);
       G.event.addListenerOnce(m,'idle',()=>{if(m.getZoom()>maxZ)m.setZoom(maxZ)});
     },
     center:()=>{const c=m.getCenter();return{lat:c.lat(),lng:c.lng()}},
@@ -754,10 +756,11 @@ function go(i,fromBack){
   $('#fab').hidden=tab===3;
   if(tab===0)setTimeout(()=>map&&map.resize(),320);
   if(tab===2){
-    setTimeout(()=>{snapTo(nSnap,false);initNear();nearMap&&nearMap.resize();startHeading(false)},320);
+    setTimeout(()=>{snapTo(nSnap,false);initNear();nearMap&&nearMap.resize();startHeading(false);startWatch();updHeadLbl()},320);
     if(!me)locate().then(()=>drawNear(true)).catch(()=>{});
   }
   if(tab===3)renderSettings();
+  if(tab!==2)stopWatch();
 }
 $('#tabs').onclick=e=>{const b=e.target.closest('[data-tab]');if(b)go(+b.dataset.tab)};
 let sx=0,sy=0,sw=false;
@@ -882,7 +885,9 @@ function renderNear(){
 /* ---------- 내 주변: 지도 + 끌어올리는 목록 ---------- */
 function bearing(a,b){const t=Math.PI/180,y=Math.sin((b.lng-a.lng)*t)*Math.cos(b.lat*t),x=Math.cos(a.lat*t)*Math.sin(b.lat*t)-Math.sin(a.lat*t)*Math.cos(b.lat*t)*Math.cos((b.lng-a.lng)*t);return (Math.atan2(y,x)/t+360)%360}
 const dir8=d=>['북','북동','동','남동','남','남서','서','북서'][Math.round(d/45)%8]+'쪽';
-let nearMap=null, nPins=[], nCircle=null, nMeH=null, heading=null, headOn=false, nFitDone=false;
+let nearMap=null, nPins=[], nCircle=null, nMeH=null, heading=null, headOn=false;
+let headUp=S.settings.headUp!==false;   // 보는 방향이 위 (기본 켜짐)
+let rotA=0, lastHd=null, nUserMoved=false, nWatch=null;
 function makeNearMap(el,o){
   if(naverOK&&inKorea(o))return naverMap(el,o);
   if(googleOK)return googleMap(el,o);
@@ -891,11 +896,23 @@ function makeNearMap(el,o){
 function initNear(){
   if(nearMap||!map)return;
   const c=me||map.center();
+  layoutRot(false);
   nearMap=makeNearMap($('#nearMap'),{lat:c.lat,lng:c.lng,z:15});
   nearMap.base(baseKey());
+  // 한 손가락으로 지도를 끌면: 보는 방향 모드에서는 북쪽 위로 바꾸고, 자동 맞춤을 멈춤
+  const rot=$('#nearRot');let tx=0,ty=0,one=false;
+  rot.addEventListener('touchstart',e=>{one=e.touches.length===1;tx=e.touches[0].clientX;ty=e.touches[0].clientY},{passive:true});
+  rot.addEventListener('touchmove',e=>{
+    if(!one||e.touches.length!==1)return;
+    if(Math.hypot(e.touches[0].clientX-tx,e.touches[0].clientY-ty)<14)return;
+    one=false;nUserMoved=true;
+    if(headUp&&heading!=null){setHeadUp(false,true)}
+  },{passive:true});
+  rot.addEventListener('mousedown',()=>{nUserMoved=true});
   drawNear(true);
 }
 const meHeadHTML=()=>`<div class="me-wrap">${heading!=null?`<div class="me-cone" style="transform:rotate(${Math.round(heading)}deg)"></div>`:''}<div class="me-dot"></div></div>`;
+const uprHTML=hh=>`<div class="upr">${hh}</div>`;
 function drawNear(fit){
   if(!nearMap)return;
   nPins.forEach(x=>x.remove());nPins=[];
@@ -903,19 +920,57 @@ function drawNear(fit){
   if(nMeH){nMeH.remove();nMeH=null}
   const r=S.filter.radius*1000;
   if(me){
-    S.places.filter(p=>inCat(p,'near')&&dist(me,p)<=r).forEach(p=>nPins.push(nearMap.pin(p.lat,p.lng,pinHTML(p),{title:p.name,onClick:()=>openDetail(p.id)})));
+    S.places.filter(p=>inCat(p,'near')&&dist(me,p)<=r).forEach(p=>nPins.push(nearMap.pin(p.lat,p.lng,uprHTML(pinHTML(p)),{title:p.name,onClick:()=>openDetail(p.id)})));
     nCircle=nearMap.circle(me.lat,me.lng,r,getComputedStyle(document.documentElement).getPropertyValue('--pine').trim()||'#7CC7A0');
     nMeH=nearMap.pin(me.lat,me.lng,meHeadHTML(),{size:[64,64],anchor:[32,32],z:900});
-    if(fit||!nFitDone){fitRadius();nFitDone=true}
+    if(fit)fitRadius();
   }
 }
+// 반경 원이 보이는 지도 영역에 꽉 차게
 function fitRadius(){
   if(!nearMap||!me)return;
-  const r=S.filter.radius*1000, dLat=r/111320, dLng=r/(111320*Math.cos(me.lat*Math.PI/180));
-  // 목록 시트에 가려지지 않는 위쪽 부분에 반경 원이 들어오도록 아래쪽을 늘려서 맞춤
-  const H=$('#p-near').clientHeight||1, f=Math.max(0.3,Math.min(1,(nY||H)/H));
-  const north=me.lat+dLat, south=north-(2*dLat)/f;
-  nearMap.fit([[south,me.lng-dLng],[north,me.lng+dLng]],18);
+  nUserMoved=false;
+  const r=S.filter.radius*1000*1.04, dLat=r/111320, dLng=r/(111320*Math.cos(me.lat*Math.PI/180));
+  const W=$('#p-near').clientWidth||1, H=$('#p-near').clientHeight||1, visH=nY>40?nY:H;
+  if(headUp&&heading!=null){
+    const box=$('#nearRot').clientWidth||H, k=box/Math.min(W,visH);
+    nearMap.fit([[me.lat-dLat*k,me.lng-dLng*k],[me.lat+dLat*k,me.lng+dLng*k]],18,0);
+  }else{
+    const f=Math.max(0.3,Math.min(1,visH/H)), north=me.lat+dLat, south=north-(2*dLat)/f;
+    nearMap.fit([[south,me.lng-dLng],[north,me.lng+dLng]],18,6);
+  }
+}
+// 보는 방향 모드: 지도 상자를 대각선 크기로 키워 보이는 영역 가운데를 중심으로 돌림
+function layoutRot(relayout=true){
+  const rot=$('#nearRot'), W=$('#p-near').clientWidth, H=$('#p-near').clientHeight;
+  const on=headUp&&heading!=null;
+  if(on){
+    const visH=nY>40?nY:H, D=Math.ceil(Math.hypot(W,H));
+    Object.assign(rot.style,{width:D+'px',height:D+'px',left:(W/2-D/2)+'px',top:(visH/2-D/2)+'px'});
+  }else{
+    Object.assign(rot.style,{width:W+'px',height:H+'px',left:'0px',top:'0px'});
+  }
+  applyRot();
+  if(relayout&&nearMap){nearMap.resize();if(!nUserMoved)fitRadius();else if(on&&me)nearMap.setView(me.lat,me.lng,nearMap.zoom())}
+}
+function applyRot(){
+  const rot=$('#nearRot'), on=headUp&&heading!=null, a=on?rotA:0;
+  rot.style.transform=`rotate(${-a}deg)`;
+  rot.style.setProperty('--hd',a+'deg');
+  $('#needle').style.transform=`rotate(${-a}deg)`;
+  updHeadLbl();
+}
+function updHeadLbl(){
+  const l=$('#headLbl');l.hidden=false;
+  if(headUp&&heading!=null){$('#hl1').textContent=`보는 방향이 위 (${dir8(heading)})`;$('#hl2').textContent='나침반을 누르면 북쪽이 위로'}
+  else if(heading!=null){$('#hl1').textContent=`북쪽이 위 (지금 ${dir8(heading)}을 보는 중)`;$('#hl2').textContent='나침반을 누르면 보는 방향이 위로'}
+  else{$('#hl1').textContent='북쪽이 위';$('#hl2').textContent='나침반을 누르면 보는 방향이 위로'}
+  $('#nCompass').setAttribute('aria-label',headUp?'북쪽이 위로 바꾸기':'보는 방향이 위로 바꾸기');
+}
+function setHeadUp(on,byDrag){
+  headUp=on;S.settings.headUp=on;save();
+  layoutRot(true);
+  if(byDrag)toast('지도를 움직여서 북쪽이 위로 바뀌었습니다. 나침반을 누르면 다시 보는 방향이 위로 옵니다.');
 }
 let headT=0;
 function onOrient(e){
@@ -924,10 +979,14 @@ function onOrient(e){
   else if(e.absolute&&e.alpha!=null)hd=360-e.alpha;
   if(hd==null)return;
   hd=(hd+((screen.orientation&&screen.orientation.angle)||0)+360)%360;
+  const first=heading==null;
   heading=hd;
-  const now=Date.now();if(now-headT<150)return;headT=now;
+  const now=Date.now();if(!first&&now-headT<120)return;headT=now;
+  // 359→1도처럼 넘어갈 때 지도가 한 바퀴 돌지 않게 누적 각도로
+  if(lastHd==null)rotA=hd;else rotA+=((hd-lastHd+540)%360)-180;
+  lastHd=hd;
   if(nMeH)nMeH.html(meHeadHTML());
-  const l=$('#headLbl');l.hidden=false;l.textContent=dir8(heading)+'을 보는 중';
+  if(first&&tab===2)layoutRot(true);else applyRot();
 }
 function startHeading(fromTap){
   if(headOn)return;
@@ -936,17 +995,32 @@ function startHeading(fromTap){
   const listen=()=>{if(headOn)return;if('ondeviceorientationabsolute' in window)addEventListener('deviceorientationabsolute',onOrient);else addEventListener('deviceorientation',onOrient);headOn=true};
   const isIOS=/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
   if(isIOS&&typeof DOE.requestPermission==='function'){
-    // 아이폰은 버튼을 눌러야만 허락을 물을 수 있음(자동 시도는 조용히 실패)
-    DOE.requestPermission().then(s=>{if(s==='granted')listen();else if(fromTap)toast('보는 방향을 표시하려면 동작 및 방향 접근을 허용하세요.')})
-      .catch(()=>{if(!fromTap){const l=$('#headLbl');l.hidden=false;l.textContent='나침반을 누르면 보는 방향이 표시됩니다'}});
+    // 아이폰은 버튼을 눌러야만 허락을 물을 수 있음
+    DOE.requestPermission().then(s=>{if(s==='granted')listen();else if(fromTap)toast('보는 방향을 쓰려면 동작 및 방향 접근을 허용하세요.')}).catch(()=>{});
     return;
   }
   listen();
 }
-$('#nCompass').onclick=()=>{startHeading(true);if(me&&nearMap)nearMap.setView(me.lat,me.lng,nearMap.zoom())};
-$('#nZin').onclick=()=>{if(!nearMap)return;const c=nearMap.center();nearMap.setView(c.lat,c.lng,nearMap.zoom()+1)};
-$('#nZout').onclick=()=>{if(!nearMap)return;const c=nearMap.center();nearMap.setView(c.lat,c.lng,nearMap.zoom()-1)};
-$('#nMe').onclick=()=>locate().then(()=>{drawNear(false);nearMap&&nearMap.setView(me.lat,me.lng,Math.max(nearMap.zoom(),15))}).catch(()=>locFail());
+// 내 주변 탭을 보는 동안 위치를 계속 따라감
+function startWatch(){
+  if(nWatch!=null||!navigator.geolocation)return;
+  let lastList=0;
+  nWatch=navigator.geolocation.watchPosition(pos=>{
+    me={lat:pos.coords.latitude,lng:pos.coords.longitude};
+    if(nMeH)nMeH.set(me.lat,me.lng);
+    if(nCircle)nCircle.set(me.lat,me.lng,S.filter.radius*1000);
+    if(nearMap&&headUp&&heading!=null&&!nUserMoved)nearMap.setView(me.lat,me.lng,nearMap.zoom());
+    if(Date.now()-lastList>8000){lastList=Date.now();renderNear()}
+  },()=>{},{enableHighAccuracy:true,maximumAge:5000});
+}
+function stopWatch(){if(nWatch!=null){navigator.geolocation.clearWatch(nWatch);nWatch=null}}
+$('#nCompass').onclick=()=>{
+  if(!headOn||heading==null){startHeading(true);if(!headUp)setHeadUp(true);toast('폰을 움직이면 보는 방향이 위로 오게 지도가 돌아갑니다.');return}
+  setHeadUp(!headUp);
+};
+$('#nZin').onclick=()=>{if(!nearMap)return;nUserMoved=true;const c=nearMap.center();nearMap.setView(c.lat,c.lng,nearMap.zoom()+1)};
+$('#nZout').onclick=()=>{if(!nearMap)return;nUserMoved=true;const c=nearMap.center();nearMap.setView(c.lat,c.lng,nearMap.zoom()-1)};
+$('#nMe').onclick=()=>locate().then(()=>{drawNear(true)}).catch(()=>locFail());
 
 /* 목록 시트: 위로 끌면 지도를 덮고, 내리면 지도가 화면 전체에 보임 */
 let nSnap='half', nY=0;
@@ -962,7 +1036,7 @@ function setSheet(y,anim){
   $('#nZoom').style.bottom=(gap+12)+'px';$('#nMe').style.bottom=(gap+12)+'px';
   $$('.nctl').forEach(el=>el.style.visibility=y<120?'hidden':'visible');
 }
-function snapTo(name,anim=true){nSnap=name;setSheet(nSnaps()[name],anim)}
+function snapTo(name,anim=true){nSnap=name;setSheet(nSnaps()[name],anim);setTimeout(()=>{if(tab===2)layoutRot(true)},anim?280:0)}
 (function sheetDrag(){
   const sh=$('#nSheet'), body=$('#nBody');
   let sy0=0,y0=0,drag=false,mode=null,lastY=0,lastT=0,vel=0;
@@ -1129,6 +1203,7 @@ function openDetail(id){
     <p class="hint">버튼을 누르면 각 지도 앱의 방문자 리뷰 화면이 열립니다.</p>
     <h3>길안내</h3>
     <div class="apps a3">${appLinks(p)}</div>
+    ${(p.region==='해외'||!inKorea(p))?'<p class="hint">구글 내비·도보는 누르면 바로 안내가 시작되고, 폰이 향한 방향대로 지도가 돌아갑니다. 북쪽이 위로 고정돼 보이면 구글 지도 화면 오른쪽의 나침반을 한 번 누르세요.</p>':''}
     <div class="btns end"><button class="btn danger" data-act="del">삭제</button><button class="btn" data-act="show">지도에서 보기</button><button class="btn primary" data-act="edit">수정</button></div>
   `);
 }
