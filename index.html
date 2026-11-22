@@ -126,6 +126,19 @@ label>input,label>select,label>textarea{margin-top:4px;color:var(--ink)}
 .sc{display:flex;flex-wrap:wrap;gap:8px;font-size:13px;align-items:center}
 .my{color:var(--gold);letter-spacing:1px}
 .ext{color:var(--muted)}
+.opts{display:grid;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px}
+.opts[hidden]{display:none}
+#optBtn{margin-left:auto}
+#optBtn.on{background:var(--pine);color:var(--on-pine)}
+.grow{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.gbig{display:flex;align-items:center;gap:6px;font-size:14px;color:var(--muted)}
+.gbig b{font-size:20px;color:var(--ink)}
+.gbig small{font-size:12px}
+.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.three label{margin-top:4px}
+.rb{display:inline-flex;align-items:center;gap:3px;font-size:13px;color:var(--ink)}
+.rl{display:inline-grid;place-items:center;width:15px;height:15px;border-radius:4px;font:700 10px/1 system-ui,sans-serif;font-style:normal;color:#fff;vertical-align:1px}
+.rl-n{background:#03A94D}.rl-c{background:#F5C400;color:#3A2E00}.rl-g{background:#4285F4}
 .tags{display:flex;flex-wrap:wrap;gap:4px 8px;font-size:13px;color:var(--pine)}
 .d-tags{margin-top:14px}
 .tagb{border:1px solid var(--line);background:var(--card);color:var(--pine);border-radius:999px;padding:4px 11px;font-size:14px;cursor:pointer}
@@ -171,6 +184,7 @@ label>input,label>select,label>textarea{margin-top:4px;color:var(--ink)}
 .ratings div+div{border-left:1px solid var(--line)}
 .ratings span{font-size:12px;color:var(--muted)}
 .ratings b{font-size:19px}
+.ratings b+small{display:block}
 .ratings small{font-size:11px;color:var(--muted);font-weight:400}
 .fame{display:flex;flex-wrap:wrap;gap:4px}
 .d-fame{margin-top:12px}
@@ -246,24 +260,26 @@ label>input,label>select,label>textarea{margin-top:4px;color:var(--ink)}
 
       <section class="page scroll" id="p-list" aria-label="목록">
         <div class="inner">
-          <header class="ph"><h1>모든 장소</h1><span class="count" id="listCount"></span></header>
+          <header class="ph"><h1>모든 장소</h1><span class="count" id="listCount"></span><button class="btn small" id="optBtn" aria-expanded="false">정렬·필터</button></header>
           <div class="tools">
             <input id="q" type="search" placeholder="상호, 업종, 키워드, 메모, 주소로 찾기" enterkeyhint="search">
-            <div class="chips" id="tagChips"></div>
-            <div class="row">
-              <div class="seg" id="regionSeg"><button data-v="all">전체</button><button data-v="국내">국내</button><button data-v="해외">해외</button></div>
-              <select id="sort" aria-label="정렬">
-                <option value="recent">최근 등록순</option>
-                <option value="visit">최근 방문순</option>
-                <option value="fame">유명한 곳 순</option>
-                <option value="rating">내 별점순</option>
-                <option value="dist">가까운 순</option>
-                <option value="name">이름순</option>
-                <option value="area">지역별로 묶기</option>
-              </select>
-            </div>
-            <div class="row"><select id="area" aria-label="지역"></select><button class="btn small" data-act="areamap" id="areaMap" hidden>이 지역 지도로 보기</button></div>
             <div class="chips" id="listChips"></div>
+            <div class="opts" id="opts" hidden>
+              <div class="row">
+                <div class="seg" id="regionSeg"><button data-v="all">전체</button><button data-v="국내">국내</button><button data-v="해외">해외</button></div>
+                <select id="sort" aria-label="정렬">
+                  <option value="recent">최근 등록순</option>
+                  <option value="visit">최근 방문순</option>
+                  <option value="fame">유명한 곳 순</option>
+                  <option value="rating">내 별점순</option>
+                  <option value="dist">가까운 순</option>
+                  <option value="name">이름순</option>
+                  <option value="area">지역별로 묶기</option>
+                </select>
+              </div>
+              <div class="row"><select id="area" aria-label="지역"></select><button class="btn small" data-act="areamap" id="areaMap" hidden>이 지역 지도로 보기</button></div>
+              <div class="chips" id="tagChips"></div>
+            </div>
           </div>
           <div id="list"></div>
         </div>
@@ -301,6 +317,9 @@ label>input,label>select,label>textarea{margin-top:4px;color:var(--ink)}
           </label>
           <p class="hint">넣으면 세계지도가 한국어 구글 지도로 바뀌고, 해외 장소 검색도 구글로 합니다(키에 Maps JavaScript API, Places API (New), Geocoding API를 켜 두어야 함). 국내는 계속 네이버 지도와 카카오 검색을 씁니다.</p>
 
+          <div class="btns"><button class="btn" data-act="gall">등록된 모든 장소의 구글 평점 가져오기</button></div>
+          <p class="hint" id="gallMsg">구글 평점이 비어 있는 장소만 찾아 채웁니다. 장소가 많으면 1~2분 걸릴 수 있습니다.</p>
+
           <h2 class="sec">카카오 연결</h2>
           <label>카카오 JavaScript 키
             <input id="s-kakao" type="text" autocomplete="off" spellcheck="false" placeholder="국내 상호 검색용">
@@ -315,7 +334,7 @@ label>input,label>select,label>textarea{margin-top:4px;color:var(--ink)}
             <label class="btn" style="margin:0;color:var(--ink);font-size:15px">파일 가져오기<input type="file" id="imp" accept="application/json,.json" hidden></label>
           </div>
           <p class="hint" id="stat"></p>
-          <p class="hint">앱 버전 2026.11.22 (v21)</p>
+          <p class="hint">앱 버전 2026.11.22 (v27)</p>
         </div>
       </section>
     </div>
@@ -365,6 +384,8 @@ function load(){
   return {places:[],cats:DEFAULT_CATS(),settings:{kakaoKey:'',googleKey:''},filter:{...DEF_FILTER}};
 }
 let S=load();
+const CF={map:'all',list:'all',near:'all'};   // 화면별 분류 선택 (서로 독립)
+const inCat=(p,k)=>CF[k]==='all'||p.cat===CF[k];
 function save(){try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){toast('저장하지 못했습니다. 브라우저 저장 공간을 확인하세요.')}}
 const cat=id=>S.cats.find(c=>c.id===id)||S.cats.find(c=>c.id==='etc')||S.cats[S.cats.length-1];
 
@@ -592,6 +613,13 @@ const makeMap=(el,o)=>{
   return leafletMap(el,o);
 };
 const inKorea=p=>p.lat>32.5&&p.lat<39.5&&p.lng>123.5&&p.lng<132.5;
+// 장소 위치에 맞는 지도로: 한국 밖이 섞이면 세계지도, 모두 한국이면 네이버 지도
+async function focusPlaces(ps){
+  if(!ps.length)return;
+  if(naverOK)await setWorldMode(!ps.every(inKorea));
+  if(ps.length===1)map.setView(ps[0].lat,ps[0].lng,ps[0].region==='해외'||!inKorea(ps[0])?16:17);
+  else map.fit(ps.map(p=>[p.lat,p.lng]),15);
+}
 async function setWorldMode(on){
   if(worldMode===on)return;
   if(on&&S.settings.googleKey&&!googleOK){try{await loadGoogle()}catch(e){}}
@@ -631,7 +659,7 @@ $('#layerMenu').onclick=e=>{
   const b=e.target.closest('[data-base]');if(!b)return;S.settings.mapType=b.dataset.base;save();map.base(baseKey());renderLayerMenu();$('#layerMenu').hidden=true;$('#btnLayer').setAttribute('aria-expanded','false')};
 let fitStep=0;
 $('#btnFit').onclick=async()=>{
-  const ps=S.places.filter(p=>S.filter.cat==='all'||p.cat===S.filter.cat);
+  const ps=S.places.filter(p=>inCat(p,'map'));
   if(fitStep===0&&ps.length){
     // 네이버 지도는 해외를 넓게 못 보여 주므로, 해외 장소가 섞여 있으면 세계지도로 전환
     if(naverOK)await setWorldMode(!ps.every(inKorea));
@@ -646,16 +674,19 @@ const pinHTML=p=>{const c=cat(p.cat);return `<div class="pin${p.status==='wish'?
 function renderMap(fit){
   if(!map)return;
   pinHs.forEach(x=>x.remove());pinHs=[];
-  const ps=S.places.filter(p=>S.filter.cat==='all'||p.cat===S.filter.cat);
+  const ps=S.places.filter(p=>inCat(p,'map'));
   ps.forEach(p=>pinHs.push(map.pin(p.lat,p.lng,pinHTML(p),{title:p.name,onClick:()=>openDetail(p.id)})));
   if(fit&&ps.length)map.fit(ps.map(p=>[p.lat,p.lng]),15);
 }
-$('#btnLocate').onclick=()=>locate().then(m=>map.setView(m.lat,m.lng,15)).catch(()=>locFail());
+$('#btnLocate').onclick=()=>locate().then(async m=>{if(naverOK&&worldMode&&inKorea(m))await setWorldMode(false);map.setView(m.lat,m.lng,15)}).catch(()=>locFail());
 
 /* ---------- 탭 ---------- */
 let tab=0;
-function go(i){
-  tab=Math.max(0,Math.min(3,i));
+let navStack=[];
+function go(i,fromBack){
+  i=Math.max(0,Math.min(3,i));
+  if(!fromBack&&i!==tab){navStack.push(tab);if(navStack.length>20)navStack.shift()}
+  tab=i;
   $('#track').style.transform=`translateX(${-100*tab}%)`;
   $$('#tabs button').forEach((b,j)=>b.setAttribute('aria-current',j===tab?'page':'false'));
   $('#fab').hidden=tab===3;
@@ -704,12 +735,17 @@ function matchQ(p,q){const ts=q.toLowerCase().split(/\s+/).map(t=>t.replace(/^#/
 function tagsHTML(p,btn){const t=tagsOf(p);if(!t.length)return '';return `<span class="tags">${t.map(x=>btn?`<button class="tagb" data-tag="${esc(x)}">#${esc(x)}</button>`:`<span>#${esc(x)}</span>`).join('')}</span>`}
 
 /* ---------- 목록 ---------- */
-function chipsHTML(){
-  return `<button class="chip" data-cat="all" aria-pressed="${S.filter.cat==='all'}">전체</button>`+
-    S.cats.map(c=>`<button class="chip" data-cat="${esc(c.id)}" aria-pressed="${S.filter.cat===c.id}">${esc(c.emoji)} ${esc(c.name)}</button>`).join('');
+function chipsHTML(k){
+  return `<button class="chip" data-cat="all" data-scope="${k}" aria-pressed="${CF[k]==='all'}">전체</button>`+
+    S.cats.map(c=>`<button class="chip" data-cat="${esc(c.id)}" data-scope="${k}" aria-pressed="${CF[k]===c.id}">${esc(c.emoji)} ${esc(c.name)}</button>`).join('');
 }
-function renderChips(){['#mapChips','#listChips','#nearChips'].forEach(s=>$(s).innerHTML=chipsHTML())}
-function extBadges(p){const e=p.ext||{},a=[];if(e.naver)a.push('네이버 '+esc(e.naver));if(e.kakao)a.push('카카오 '+esc(e.kakao));return a.map(x=>`<span class="ext">${x}</span>`).join('')}
+function renderChips(){$('#mapChips').innerHTML=chipsHTML('map');$('#listChips').innerHTML=chipsHTML('list');$('#nearChips').innerHTML=chipsHTML('near')}
+const gRate=e=>e.g||(e.google&&e.google.rating)||'';
+function extBadges(p){
+  const e=p.ext||{},a=[];
+  if(gRate(e))a.push(['g','G',gRate(e)]);
+  return a.map(([k,l,v])=>`<span class="rb"><i class="rl rl-${k}">${l}</i>${esc(v)}</span>`).join('');
+}
 function rowHTML(p,d){
   const c=cat(p.cat);
   if(d==null&&me)d=dist(me,p);
@@ -739,7 +775,7 @@ const SORTS={
 };
 function renderList(){
   const q=($('#q').value||'').trim();
-  const base=S.places.filter(p=>(S.filter.cat==='all'||p.cat===S.filter.cat)&&(S.filter.region==='all'||p.region===S.filter.region));
+  const base=S.places.filter(p=>inCat(p,'list')&&(S.filter.region==='all'||p.region===S.filter.region));
   // 지역 선택지
   const cnt={};base.forEach(p=>{const a=areaOf(p);cnt[a]=(cnt[a]||0)+1});
   const areas=Object.keys(cnt).sort((a,b)=>cnt[b]-cnt[a]||a.localeCompare(b,'ko'));
@@ -758,6 +794,8 @@ function renderList(){
   $('#listCount').textContent=S.places.length?`${ps.length}곳`:'';
   $$('#regionSeg button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.v===S.filter.region));
   $('#sort').value=S.filter.sort;
+  const nOpt=(S.filter.region!=='all')+(S.filter.area!=='all')+(S.filter.sort!=='recent');
+  $('#optBtn').textContent=nOpt?`정렬·필터 (${nOpt})`:'정렬·필터';$('#optBtn').classList.toggle('on',!!nOpt);
   if(!ps.length){$('#list').innerHTML=`<p class="empty">${S.places.length?'찾는 장소가 없습니다. 검색어를 줄이거나 분류·지역을 ‘전체’로 바꿔 보세요.':'아직 기록한 장소가 없습니다.<br>‘장소 추가’를 눌러 예전에 가 본 곳부터 남겨 보세요.'}</p>`;return}
   if(S.filter.sort==='area'){
     const g={};ps.forEach(p=>{(g[areaOf(p)]=g[areaOf(p)]||[]).push(p)});
@@ -771,7 +809,7 @@ function renderNear(){
   const box=$('#near');
   if(!me){$('#nearCount').textContent='';box.innerHTML=`<p class="empty">현재 위치를 확인하면 등록한 장소를 가까운 순으로 보여 줍니다.<br><button class="btn primary" data-act="locate">현재 위치 확인</button></p>`;return}
   const r=S.filter.radius*1000;
-  const ps=S.places.filter(p=>S.filter.cat==='all'||p.cat===S.filter.cat).map(p=>({p,d:dist(me,p)})).filter(x=>x.d<=r).sort((a,b)=>a.d-b.d);
+  const ps=S.places.filter(p=>inCat(p,'near')).map(p=>({p,d:dist(me,p)})).filter(x=>x.d<=r).sort((a,b)=>a.d-b.d);
   $('#nearCount').textContent=`${ps.length}곳`;
   box.innerHTML=ps.length?`<div class="list">${ps.map(x=>rowHTML(x.p,x.d)).join('')}</div>`:`<p class="empty">${S.filter.radius}km 안에 등록한 장소가 없습니다. 반경을 넓혀 보세요.</p>`;
 }
@@ -779,7 +817,11 @@ function renderAll(fit){renderChips();renderMap(fit);renderList();renderNear()}
 
 document.addEventListener('click',e=>{
   const ch=e.target.closest('[data-cat]');
-  if(ch){S.filter.cat=ch.dataset.cat;save();renderAll();return}
+  if(ch){
+    const k=ch.dataset.scope;CF[k]=ch.dataset.cat;renderChips();
+    if(k==='map')renderMap();else if(k==='list')renderList();else renderNear();
+    return;
+  }
   const r=e.target.closest('[data-r]');
   if(r){S.filter.radius=+r.dataset.r;save();renderNear();return}
   const qt=e.target.closest('[data-qtag]');
@@ -794,6 +836,7 @@ document.addEventListener('click',e=>{
 $('#regionSeg').onclick=e=>{const b=e.target.closest('button');if(!b)return;S.filter.region=b.dataset.v;save();renderList()};
 $('#sort').onchange=e=>{S.filter.sort=e.target.value;save();if(S.filter.sort==='dist'&&!me)locate().catch(()=>toast('위치 권한이 있어야 가까운 순으로 볼 수 있습니다.'));renderList()};
 $('#q').oninput=renderList;
+$('#optBtn').onclick=()=>{const o=$('#opts');o.hidden=!o.hidden;$('#optBtn').setAttribute('aria-expanded',String(!o.hidden))};
 $('#area').onchange=e=>{S.filter.area=e.target.value;save();renderList()};
 $('#fab').onclick=()=>openForm(null);
 
@@ -802,16 +845,28 @@ let sheetOpen=false, mm=null, mmMarker=null;
 function sheet(html){
   resPins=[];if(mm){mm.destroy();mm=null;mmMarker=null}
   $('#sheetBody').innerHTML=html;
-  if(!sheetOpen){$('#sheetWrap').hidden=false;sheetOpen=true;history.pushState({sheet:1},'')}
+  if(!sheetOpen){$('#sheetWrap').hidden=false;sheetOpen=true}
   $('.sheet').scrollTop=0;
 }
-function closeSheet(fromPop){
+function closeSheet(){
   if(!sheetOpen)return;
   sheetOpen=false;resPins=[];if(mm){mm.destroy();mm=null;mmMarker=null}
   $('#sheetWrap').hidden=true;$('#sheetBody').innerHTML='';draft=null;
-  if(!fromPop)history.back();
 }
-window.addEventListener('popstate',()=>{if(sheetOpen)closeSheet(true)});
+/* 뒤로 버튼: 창 닫기 → 이전 화면 → (지도 화면에서) 한 번 더 누르면 종료 */
+let armed=false;
+function arm(){if(!armed){history.pushState({pb:1},'');armed=true}}
+window.addEventListener('popstate',()=>{
+  armed=false;
+  if(sheetOpen){closeSheet();arm();return}
+  const lm=$('#layerMenu');if(lm&&!lm.hidden){lm.hidden=true;arm();return}
+  while(navStack.length&&navStack[navStack.length-1]===tab)navStack.pop();
+  if(navStack.length){go(navStack.pop(),true);arm();return}
+  if(tab!==0){go(0,true);arm();return}
+  toast('뒤로 버튼을 한 번 더 누르면 앱이 닫힙니다.');
+  setTimeout(()=>arm(),2000);
+});
+try{history.replaceState({pbBase:1},'');arm()}catch(e){}
 
 /* ---------- 상세 ---------- */
 let cur=null;
@@ -873,12 +928,13 @@ function openDetail(id){
     ${p.memo?`<div class="memo-box">${esc(p.memo).replace(/\n/g,'<br>')}</div>`:''}
     ${tagsOf(p).length?`<div class="d-tags">${tagsHTML(p,true)}</div><p class="hint">키워드를 누르면 같은 키워드의 장소를 모아 봅니다.</p>`:''}
     <h3>평점·방문자 리뷰</h3>
-    ${p.region!=='해외'?`<div class="ratings c2">
-      <div><span>네이버</span><b>${e.naver?esc(e.naver):'–'}</b></div>
-      <div><span>카카오</span><b>${e.kakao?esc(e.kakao):'–'}</b></div>
-    </div>`:''}
+    <div class="grow">
+      <span class="gbig"><i class="rl rl-g">G</i> 구글 평점 <b>${gRate(e)?esc(gRate(e)):'–'}</b>${e.gCount?` <small>리뷰 ${Number(e.gCount).toLocaleString()}개</small>`:''}</span>
+      ${S.settings.googleKey?`<button class="btn small" data-act="grate">${gRate(e)?'새로 가져오기':'가져오기'}</button>`:''}
+    </div>
+    ${e.gAt?`<p class="hint" style="margin-top:4px">${esc(e.gAt)} 기준</p>`:(!S.settings.googleKey?'<p class="hint" style="margin-top:4px">설정에 구글 지도 API 키를 넣으면 구글 평점을 자동으로 가져옵니다.</p>':'')}
     <div class="apps a3" style="margin-top:8px">${reviewLinks(p)}</div>
-    <p class="hint">버튼을 누르면 그 지도 앱의 방문자 리뷰 화면이 열립니다. 평점은 거기서 보고 ‘수정’에 적어 두면 목록에도 보입니다.</p>
+    <p class="hint">버튼을 누르면 각 지도 앱의 방문자 리뷰 화면이 열립니다.</p>
     <h3>길안내</h3>
     <div class="apps a3">${appLinks(p)}</div>
     <div class="btns end"><button class="btn danger" data-act="del">삭제</button><button class="btn" data-act="show">지도에서 보기</button><button class="btn primary" data-act="edit">수정</button></div>
@@ -917,29 +973,47 @@ async function searchKakao(q){
   const S2=kakao.maps.services.Status, OK=S2.OK, ZERO=S2.ZERO_RESULT;
   const c=me||map.center();
   const ps=new kakao.maps.services.Places(), g=new kakao.maps.services.Geocoder();
-  const kw=(qq)=>new Promise((res,rej)=>ps.keywordSearch(qq,(d,st)=>{
+  const kw=(qq,near)=>new Promise((res,rej)=>ps.keywordSearch(qq,(d,st)=>{
     if(st===OK)res(d.map(x=>({name:x.place_name,address:x.road_address_name||x.address_name,lat:+x.y,lng:+x.x,phone:x.phone||'',url:x.place_url||'',category:x.category_name||'',region:'국내',src:'kakao'})));
     else if(st===ZERO)res([]);else rej(new Error('kakao'));
-  },{location:new kakao.maps.LatLng(c.lat,c.lng),size:15}));
+  },near?{location:new kakao.maps.LatLng(c.lat,c.lng),size:15}:{size:15}));
   const ad=(qq,unit)=>new Promise(res=>g.addressSearch(qq,(d,st)=>res(st===OK?d.map(x=>{
     const ra=x.road_address, bn=ra&&ra.building_name?` (${ra.building_name})`:'';
-    return{name:'',address:((ra&&ra.address_name)||x.address_name)+bn+(unit?' '+unit:''),lat:+x.y,lng:+x.x,category:'주소',region:'국내',src:'kakao',isAddr:true}}):[])));
-  // 1) 그대로 상호 검색
-  let out=await kw(q);
-  if(out.length)return out;
+    const exact=/_ADDR$/.test(x.address_type||'')||!!(ra&&ra.main_building_no);
+    return{name:'',address:((ra&&ra.address_name)||x.address_name)+bn+(unit&&exact?' '+unit:''),lat:+x.y,lng:+x.x,
+      category:exact?'주소 (번지까지 정확)':'도로·동네 위치 (번지는 못 찾음)',region:'국내',src:'kakao',isAddr:true,exact}}):[])));
   const k=krParts(q);
-  // 2) 주소로 (상세주소 뗀 도로명/지번/전체)
-  for(const a of [k.road,k.jibun,k.base].filter(Boolean)){
-    out=await ad(a,k.unit);
-    if(out.length){
-      // 같은 자리의 건물(아파트 등)도 함께 보여 줌
-      if(k.bldg){try{const b=(await kw(k.bldg)).filter(x=>Math.abs(x.lat-out[0].lat)<0.01&&Math.abs(x.lng-out[0].lng)<0.01);out=out.concat(b)}catch(e){}}
-      kNote=out.length>1&&out.filter(x=>x.isAddr).length>1?'같은 도로명이 여러 지역에 있습니다. 시·구가 맞는 주소를 고르세요.':'';
-      return out;
+  const addrLike=!!(k.road||k.jibun);
+  if(addrLike){
+    // 주소 모양이면: 주소 검색을 먼저 (주변 상호가 섞여 나오지 않게)
+    let approx=[];
+    for(const a of [...new Set([k.road,k.jibun,k.base].filter(Boolean))]){
+      const r=await ad(a,k.unit);
+      const ex=r.filter(x=>x.exact);
+      if(ex.length){
+        let out=ex;
+        if(k.bldg){try{out=out.concat((await kw(k.bldg,false)).filter(x=>Math.abs(x.lat-ex[0].lat)<0.005&&Math.abs(x.lng-ex[0].lng)<0.005))}catch(e){}}
+        kNote=ex.length>1?'같은 주소가 여러 지역에 있습니다. 시·구가 맞는 것을 고르세요.':'';
+        return out;
+      }
+      if(!approx.length)approx=r;
     }
+    // 카카오가 번지까지 못 찾으면 구글 주소 찾기로 보완
+    if(S.settings.googleKey){
+      try{
+        await loadGoogle();
+        const gg=(await googleGeocode(k.base||q)).filter(x=>inKorea(x)).map(x=>({...x,address:x.address+(k.unit?' '+k.unit:'')}));
+        if(gg.length){kNote='카카오에서 번지까지 찾지 못해 구글로 찾은 주소 위치입니다.';return gg.concat(approx)}
+      }catch(e){}
+    }
+    if(approx.length){kNote='번지까지는 찾지 못했습니다. 고른 뒤 작은 지도에서 핀을 끌어 정확한 건물로 옮기세요.';return approx}
+    if(k.bldg){const b=await kw(k.bldg,true);if(b.length){kNote='주소를 찾지 못해 건물 이름으로 찾았습니다. 지역이 맞는지 확인하세요.';return b}}
+    return [];
   }
-  // 3) 상세주소 뗀 상호 검색, 건물명만으로 검색
-  for(const qq of [k.base,k.bldg].filter(x=>x&&x!==q)){out=await kw(qq);if(out.length)return out}
+  // 상호 검색
+  let out=await kw(q,true);
+  if(out.length)return out;
+  for(const qq of [k.base,k.bldg].filter(x=>x&&x!==q)){out=await kw(qq,true);if(out.length)return out}
   return [];
 }
 let kNote='';
@@ -1078,7 +1152,7 @@ async function reverse(lat,lng){
 
 /* ---------- 등록·수정 폼 ---------- */
 let draft=null, src='kakao', results=[];
-function blank(){return{id:null,name:'',cat:S.filter.cat!=='all'?S.filter.cat:S.cats[0].id,sub:'',region:'국내',address:'',lat:null,lng:null,status:'visited',visited:'',rating:0,tags:[],kakaoCat:'',revisit:false,memo:'',phone:'',kakaoUrl:'',ext:{naver:'',kakao:'',google:null}}}
+function blank(){return{id:null,name:'',cat:(tab===0?CF.map:tab===1?CF.list:CF.near)!=='all'?(tab===0?CF.map:tab===1?CF.list:CF.near):S.cats[0].id,sub:'',region:'국내',address:'',lat:null,lng:null,status:'visited',visited:'',rating:0,tags:[],kakaoCat:'',revisit:false,memo:'',phone:'',kakaoUrl:'',ext:{naver:'',kakao:'',google:null}}}
 function openForm(p,preset){
   draft=p?JSON.parse(JSON.stringify(p)):Object.assign(blank(),preset||{});
   draft.ext=draft.ext||{naver:'',kakao:'',google:null};
@@ -1114,7 +1188,7 @@ function openForm(p,preset){
     <label>TV 방송<input id="f-tv" type="text" placeholder="예: 생활의 달인, 수요미식회"></label>
     <div class="btns"><button type="button" class="btn small" data-act="famecheck" data-w="naver">네이버에서 확인</button><button type="button" class="btn small" data-act="famecheck" data-w="google">구글에서 확인</button></div>
     <p class="hint">미쉐린, 블루리본, 방송 출연 여부는 공개된 연동 방법이 없어 자동으로 알 수 없습니다. 위 버튼으로 검색해 보고 골라 두세요.</p>
-    <div class="two"><label>네이버 평점<input id="f-naver" type="text" inputmode="decimal" placeholder="예: 4.52"></label><label>카카오 평점<input id="f-kakao" type="text" inputmode="decimal" placeholder="예: 4.1"></label></div>
+    
     <div class="btns end"><button class="btn" data-act="cancel">취소</button><button class="btn primary" data-act="save">저장</button></div>
   `);
   writeForm();setSeg('#srcSeg',src);
@@ -1154,7 +1228,7 @@ function writeForm(){
   $('#f-revisit').checked=!!draft.revisit;$('#f-memo').value=draft.memo||'';
   $('#f-tags').value=tagsOf(draft).join(' ');renderTagPick();
   const f=draft.fame||{};$('#f-mich').value=f.mich||'';$('#f-ribbon').value=String(f.ribbon||0);$('#f-tmap').checked=!!f.tmap;$('#f-tv').value=f.tv||'';
-  $('#f-naver').value=draft.ext.naver||'';$('#f-kakao').value=draft.ext.kakao||'';
+  
 }
 function readForm(){
   draft.name=$('#f-name').value.trim();draft.address=$('#f-addr').value.trim();
@@ -1164,7 +1238,7 @@ function readForm(){
   draft.revisit=$('#f-revisit').checked;draft.memo=$('#f-memo').value.trim();
   draft.tags=parseTags($('#f-tags').value);
   draft.fame={mich:$('#f-mich').value,ribbon:+$('#f-ribbon').value||0,tmap:$('#f-tmap').checked,tv:$('#f-tv').value.trim()};
-  draft.ext.naver=$('#f-naver').value.trim();draft.ext.kakao=$('#f-kakao').value.trim();
+  
 }
 function formPin(){const c=cat(draft.cat);return `<div class="pin"><span style="--c:${esc(c.color)}"><i>${esc(c.emoji)}</i></span></div>`}
 function initMini(){
@@ -1270,6 +1344,24 @@ function pick(r){
   if(mm){mm.setView(r.lat,r.lng,16);mmMarker.html(formPin())}
   $('#sres').innerHTML=`<p class="hint ok">‘${esc(r.name||r.address)}’ 위치를 넣었습니다. 아래 내용을 확인하고 저장하세요.</p>`;
 }
+/* 구글 평점 자동 조회 (Places API New) — 이름이 맞는 가게만 */
+const normN=s=>String(s||'').toLowerCase().replace(/[\s()\[\]·.,'"\-_/]|점$|본점$/g,'');
+async function fetchGRating(p){
+  if(!S.settings.googleKey||!p.name)return false;
+  await loadGoogle();
+  const {Place}=await google.maps.importLibrary('places');
+  const area=inKorea(p)?(p.address||'').split(' ').slice(0,2).join(' '):'';
+  const {places}=await Place.searchByText({textQuery:(p.name+' '+area).trim(),fields:['displayName','rating','userRatingCount','location'],
+    locationBias:{center:{lat:p.lat,lng:p.lng},radius:400},maxResultCount:5,language:'ko'});
+  const a=normN(p.name);
+  const hit=(places||[]).map(x=>({x,d:dist(p,{lat:x.location.lat(),lng:x.location.lng()})}))
+    .filter(o=>o.d<400&&o.x.rating!=null&&(()=>{const b=normN(o.x.displayName);return b&&a&&(b.includes(a)||a.includes(b)||b.slice(0,3)===a.slice(0,3))})())
+    .sort((m,n)=>m.d-n.d)[0];
+  if(!hit)return false;
+  p.ext=p.ext||{};p.ext.g=String(hit.x.rating);p.ext.gCount=hit.x.userRatingCount||0;p.ext.gAt=new Date().toISOString().slice(0,10);
+  if(p.ext.google)delete p.ext.google;
+  return true;
+}
 function savePlace(){
   readForm();
   if(!draft.name){toast('이름을 입력하세요.');$('#f-name').focus();return}
@@ -1282,6 +1374,8 @@ function savePlace(){
   const p=draft;save();closeSheet();renderAll();
   map.setView(p.lat,p.lng,Math.max(map.zoom(),15));
   toast(isNew?'저장했습니다.':'수정했습니다.');
+  // 구글 평점이 비어 있으면 자동으로 가져오기
+  if(S.settings.googleKey&&!gRate(p.ext||{}))fetchGRating(p).then(ok=>{if(ok){save();renderAll();toast(`구글 평점 ${p.ext.g}을(를) 가져왔습니다.`)}}).catch(()=>{});
 }
 function addCat(name){const c={id:uid(),name,emoji:'📌',color:'#7A5BA6',subs:[]};const i=S.cats.findIndex(x=>x.id==='etc');S.cats.splice(i<0?S.cats.length:i,0,c);save();renderChips();return c}
 
@@ -1307,6 +1401,11 @@ $('#sheetBody').addEventListener('click',async e=>{
   if(act==='search')doSearch();
   else if(act==='here')locate().then(m=>{setLoc(m,true);mm&&mm.setView(m.lat,m.lng,17)}).catch(()=>locFail());
   else if(act==='save')savePlace();
+  else if(act==='grate'&&p){
+    a.disabled=true;a.textContent='구글에서 찾는 중…';
+    try{const ok=await fetchGRating(p);if(ok){save();renderAll();openDetail(p.id);toast(`구글 평점 ${p.ext.g}을(를) 가져왔습니다.`)}else{toast('구글에서 이 가게를 찾지 못했습니다. 이름이 구글과 다르면 이름을 고친 뒤 다시 해 보세요.');a.disabled=false;a.textContent='가져오기'}}
+    catch(err){toast('구글 평점을 가져오지 못했습니다. 구글 키에 Places API (New)가 허용되어 있는지 확인하세요.');a.disabled=false;a.textContent='가져오기'}
+  }
   else if(act==='share'&&p){
     if(p.memo)$('#shareBox').innerHTML=`<div class="share-pick"><span>메모도 함께 보낼까요?</span><button class="btn small" data-act="share1">장소만</button><button class="btn small primary" data-act="share2">메모까지</button></div>`;
     else sharePlace(p,false);
@@ -1320,7 +1419,7 @@ $('#sheetBody').addEventListener('click',async e=>{
   }
   else if(act==='cancel')closeSheet();
   else if(act==='edit'&&p)openForm(p);
-  else if(act==='show'&&p){closeSheet();go(0);setTimeout(()=>map.setView(p.lat,p.lng,17),340)}
+  else if(act==='show'&&p){closeSheet();go(0);setTimeout(()=>focusPlaces([p]),340)}
   else if(act==='del'&&p){if(confirm(`‘${p.name}’을(를) 삭제할까요? 되돌릴 수 없습니다.`)){S.places=S.places.filter(x=>x.id!==p.id);save();closeSheet();renderAll();toast('삭제했습니다.')}}
 });
 $('#sheetBody').addEventListener('change',e=>{
@@ -1364,11 +1463,25 @@ $('#catEd').addEventListener('change',e=>{
   c.subs=$('.ce-subs',row).value.split(',').map(s=>s.trim()).filter(Boolean);
   save();renderAll();
 });
-function pageAction(act,el){
+async function pageAction(act,el){
+  if(act==='gall'){
+    if(!S.settings.googleKey){toast('먼저 구글 지도 API 키를 넣고 저장하세요.');return}
+    const todo=S.places.filter(x=>x.name&&!gRate(x.ext||{}));
+    if(!todo.length){$('#gallMsg').textContent='구글 평점이 비어 있는 장소가 없습니다.';return}
+    el.disabled=true;let ok=0,n=0;
+    for(const x of todo){
+      n++;$('#gallMsg').textContent=`구글에서 찾는 중… ${n}/${todo.length}`;
+      try{if(await fetchGRating(x))ok++}catch(err){$('#gallMsg').textContent='구글 평점을 가져오지 못했습니다. 키에 Places API (New)가 허용되어 있는지 확인하세요.';break}
+      await new Promise(r=>setTimeout(r,250));
+    }
+    save();renderAll();el.disabled=false;
+    if(n===todo.length)$('#gallMsg').textContent=`${todo.length}곳 중 ${ok}곳의 구글 평점을 채웠습니다. 못 찾은 곳은 이름이 구글과 다르거나 구글에 평점이 없는 곳입니다.`;
+    return;
+  }
   if(act==='areamap'){
     if(!listShown.length)return;
     go(0);
-    setTimeout(()=>map.fit(listShown.map(p=>[p.lat,p.lng]),15),340);
+    setTimeout(()=>focusPlaces(listShown),340);
     return;
   }
   if(act==='locate'){locate().then(()=>renderNear()).catch(()=>locFail())}
@@ -1381,7 +1494,7 @@ function pageAction(act,el){
     if(!confirm(n?`‘${c.name}’ 분류를 지우고 장소 ${n}곳을 ‘${to.name}’(으)로 옮길까요?`:`‘${c.name}’ 분류를 지울까요?`))return;
     S.places.forEach(p=>{if(p.cat===id){p.cat=to.id;p.sub=''}});
     S.cats=S.cats.filter(x=>x.id!==id);
-    if(S.filter.cat===id)S.filter.cat='all';
+    for(const k in CF)if(CF[k]===id)CF[k]='all';
     save();renderAll();renderSettings();
   }
   else if(act==='savekeys'){
