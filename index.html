@@ -197,6 +197,9 @@ label>input,label>select,label>textarea{margin-top:4px;color:var(--ink)}
 .res-i{text-align:left;background:none;border:0;border-bottom:1px solid var(--line);padding:10px 4px;display:grid;gap:1px;cursor:pointer}
 .res-i:active{background:var(--pine-soft)}
 .res-i span{font-size:13px;color:var(--muted)}
+.rpin{width:26px;height:26px;border-radius:50%;background:#fff;color:var(--pine);border:2px solid var(--pine);display:grid;place-items:center;font:700 13px/1 "IBM Plex Sans KR",sans-serif;box-shadow:0 1px 4px rgba(0,0,0,.3);cursor:pointer}
+.rpin.first{background:var(--pine);color:#fff}
+.rnum{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;border:1.5px solid var(--pine);color:var(--pine);font-size:12px;margin-right:6px;vertical-align:1px}
 .res-i.addr-r{background:var(--pine-soft)}
 .res-i small{font-size:12px;color:var(--pine)}
 .here{margin-bottom:12px}
@@ -312,7 +315,7 @@ label>input,label>select,label>textarea{margin-top:4px;color:var(--ink)}
             <label class="btn" style="margin:0;color:var(--ink);font-size:15px">파일 가져오기<input type="file" id="imp" accept="application/json,.json" hidden></label>
           </div>
           <p class="hint" id="stat"></p>
-          <p class="hint">앱 버전 2026.11.22 (v19)</p>
+          <p class="hint">앱 버전 2026.11.22 (v21)</p>
         </div>
       </section>
     </div>
@@ -797,14 +800,14 @@ $('#fab').onclick=()=>openForm(null);
 /* ---------- 바텀 시트 ---------- */
 let sheetOpen=false, mm=null, mmMarker=null;
 function sheet(html){
-  if(mm){mm.destroy();mm=null;mmMarker=null}
+  resPins=[];if(mm){mm.destroy();mm=null;mmMarker=null}
   $('#sheetBody').innerHTML=html;
   if(!sheetOpen){$('#sheetWrap').hidden=false;sheetOpen=true;history.pushState({sheet:1},'')}
   $('.sheet').scrollTop=0;
 }
 function closeSheet(fromPop){
   if(!sheetOpen)return;
-  sheetOpen=false;if(mm){mm.destroy();mm=null;mmMarker=null}
+  sheetOpen=false;resPins=[];if(mm){mm.destroy();mm=null;mmMarker=null}
   $('#sheetWrap').hidden=true;$('#sheetBody').innerHTML='';draft=null;
   if(!fromPop)history.back();
 }
@@ -1012,7 +1015,7 @@ async function nominatim(q){
   return js.map(d=>({name:d.name||d.display_name.split(',')[0],address:d.display_name,lat:+d.lat,lng:+d.lon,category:d.type||'',region:(d.address&&d.address.country_code)==='kr'?'국내':'해외',src:'world'}));
 }
 let worldNote='', gSearchBroken=false;
-const looksAddress=q=>/\d/.test(q)&&/丁目|番地|番|号|ch[oō]me|〒|\d{3}-\d{4}|\d+-\d+|번지|번길|\d+\s*(st|nd|rd|th)?\s+(street|st\.?|avenue|ave\.?|road|rd\.?|blvd)|rue |via |calle /i.test(q);
+const looksAddress=q=>/\d/.test(q)&&/(대로|로|길)\s*\d|[동리가]\s*\d+(-\d+)?(\s|$)|\d+\s*호|丁目|番地|番|号|ch[oō]me|〒|\d{3}-\d{4}|\d+-\d+|번지|번길|\d+\s*(st|nd|rd|th)?\s+(street|st\.?|avenue|ave\.?|road|rd\.?|blvd)|rue |via |calle /i.test(q);
 async function googlePlaces(q,c){
   const {Place}=await google.maps.importLibrary('places');
   const {places}=await Place.searchByText({
@@ -1212,6 +1215,15 @@ async function loadHere(){
       :'<p class="hint">주변에서 찾은 가게가 없습니다. 위치는 지금 자리로 넣었으니 이름만 적거나 아래에서 검색하세요.</p>';
   }catch(e){if($('#here'))box.innerHTML='<p class="hint">주변 가게를 불러오지 못했습니다. 카카오 키와 사이트 도메인 등록을 확인하세요. 위치는 지금 자리로 넣었습니다.</p>'}
 }
+let resPins=[];
+function clearResPins(){resPins.forEach(x=>{try{x.remove()}catch(e){}});resPins=[]}
+function showResPins(list){
+  clearResPins();
+  if(!mm||!list.length)return;
+  list.forEach((r,i)=>resPins.push(mm.pin(r.lat,r.lng,`<div class="rpin${i===0?' first':''}">${i+1}</div>`,{size:[26,26],anchor:[13,13],z:400-i,title:r.name||r.address,onClick:()=>{const b=$(`[data-ri="${i}"]`);if(b)b.click()}})));
+  if(list.length===1)mm.setView(list[0].lat,list[0].lng,16);
+  else mm.fit(list.map(r=>[r.lat,r.lng]),16);
+}
 async function doSearch(){
   const q=$('#sq').value.trim();if(!q)return;
   const box=$('#sres');let note='';
@@ -1225,17 +1237,25 @@ async function doSearch(){
     results=s==='kakao'?await searchKakao(q):await searchWorld(q);
     if(s==='kakao'&&kNote)note=[note,kNote].filter(Boolean).join(' ');
     const krAddr=/[가-힣]/.test(q)&&/(대로|로|길|동|리|가)\s*\d/.test(q);
-    if(s==='kakao'&&!results.length&&!krAddr){results=await searchWorld(q);if(results.length){note='국내에서 찾지 못해 해외·전세계에서 찾은 결과입니다.';setSeg('#srcSeg','world');src='world'}}
+    if(s==='kakao'&&!results.length&&S.settings.googleKey){
+      worldNote='';
+      try{results=await searchGoogle(q)}catch(e){results=[]}
+      if(results.length)note=['카카오에서 찾지 못해 구글에서 찾은 결과입니다.',worldNote].filter(Boolean).join(' ');
+    }
+    else if(s==='kakao'&&!results.length&&!krAddr){results=await searchWorld(q);if(results.length){note='국내에서 찾지 못해 해외·전세계에서 찾은 결과입니다.';setSeg('#srcSeg','world');src='world'}}
     if(s==='world'||src==='world')note=[note,worldNote].filter(Boolean).join(' ');
     if(!$('#sres'))return;
     box.innerHTML=(note?`<p class="hint">${note}</p>`:'')+(results.length?
-      `<div class="res">${results.map((r,i)=>`<button class="res-i${r.isAddr?' addr-r':''}" data-ri="${i}"><b>${r.isAddr?'📍 ':''}${esc(r.name||r.address)}</b>${r.name?`<span>${esc(r.address)}</span>`:''}${r.category?`<small>${esc(r.category)}</small>`:''}</button>`).join('')}</div>`:
-      `<p class="hint">결과가 없습니다. 국내 주소는 시·구를 붙여서(예: 인천 서구 원당대로 685), 상호는 지역명을 붙여서(예: 하남 미사 ○○식당), 해외는 동네·도시 이름만(예: Shimoishida, Kofu) 넣어 보세요. 작은 지도를 눌러 직접 위치를 정해도 됩니다.</p>`);
+      `<div class="res">${results.map((r,i)=>`<button class="res-i${r.isAddr?' addr-r':''}" data-ri="${i}"><b><span class="rnum">${i+1}</span>${r.isAddr?'📍 ':''}${esc(r.name||r.address)}</b>${r.name?`<span>${esc(r.address)}</span>`:''}${r.category?`<small>${esc(r.category)}</small>`:''}</button>`).join('')}</div>`:
+      `<p class="hint">결과가 없습니다. 국내 주소는 시·구를 붙여서(예: ○○시 ○○구 ○○로 123), 상호는 지역명을 붙여서(예: 하남 미사 ○○식당), 해외는 동네·도시 이름만(예: Shimoishida, Kofu) 넣어 보세요. 작은 지도를 눌러 직접 위치를 정해도 됩니다.</p>`);
+    showResPins(results);
+    if(results.length)box.insertAdjacentHTML('beforeend','<p class="hint">아래 지도에 번호로 표시했습니다. 목록이나 지도의 번호를 누르면 그 장소가 선택됩니다.</p>');
   }catch(e){
     box.innerHTML=`<p class="hint">검색하지 못했습니다. ${s==='kakao'?'카카오 키와, 카카오 앱 설정에 이 사이트 주소가 등록됐는지 확인하세요.':'인터넷 연결을 확인하세요.'}</p>`;
   }
 }
 function pick(r){
+  clearResPins();
   readForm();
   if(r.name)draft.name=r.name;
   draft.address=r.address||draft.address;draft._auto=false;
