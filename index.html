@@ -381,7 +381,7 @@ label>input,label>select,label>textarea{margin-top:4px;color:var(--ink)}
             <label class="btn" style="margin:0;color:var(--ink);font-size:15px">파일 가져오기<input type="file" id="imp" accept="application/json,.json" hidden></label>
           </div>
           <p class="hint" id="stat"></p>
-          <p class="hint">앱 버전 2026.11.22 (v32)</p>
+          <p class="hint">앱 버전 2026.11.22 (v33)</p>
         </div>
       </section>
     </div>
@@ -537,7 +537,7 @@ function leafletMap(el,{lat,lng,z,mini}){
     onTap:cb=>m.on('click',ev=>cb(ev.latlng.lat,ev.latlng.lng)),
     onLong:cb=>m.on('contextmenu',ev=>cb(ev.latlng.lat,ev.latlng.lng)),
     base:k=>{
-      el.classList.toggle('dkmap',isDark()&&k==='basic');
+      el.classList.remove('dkmap');
       bl.forEach(l=>m.removeLayer(l));bl=(LBASES[k]||LBASES.basic)();bl.forEach(l=>l.addTo(m));
       const tok={};api._tok=tok;
       if(k==='basic')loadML().then(()=>{
@@ -588,7 +588,7 @@ function naverMap(el,{lat,lng,z,mini}){
     circle:(a,b,r,col)=>{const c=new N.Circle({map:m,center:LL(a,b),radius:r,strokeColor:col,strokeOpacity:.8,strokeWeight:1.5,strokeStyle:'shortdash',fillColor:col,fillOpacity:.07,clickable:false});return{remove(){c.setMap(null)},set(x,y,rr){c.setCenter(LL(x,y));c.setRadius(rr)}}},
     onTap:cb=>N.Event.addListener(m,'click',ev=>cb(ev.coord.lat(),ev.coord.lng())),
     onLong:cb=>{N.Event.addListener(m,'longtap',ev=>cb(ev.coord.lat(),ev.coord.lng()));N.Event.addListener(m,'rightclick',ev=>cb(ev.coord.lat(),ev.coord.lng()))},
-    base:k=>{el.classList.toggle('dkmap',isDark()&&k==='basic');m.setMapTypeId(TYPES[k]||TYPES.basic)},
+    base:k=>m.setMapTypeId(TYPES[k]||TYPES.basic),
     destroy:()=>{try{m.destroy()}catch(err){}el.innerHTML='';el.removeAttribute('style')}
   };
 }
@@ -679,7 +679,7 @@ function googleMap(el,{lat,lng,z}){
     circle:(a,b,r,col)=>{const c=new G.Circle({map:m,center:{lat:a,lng:b},radius:r,strokeColor:col,strokeOpacity:.8,strokeWeight:1.5,fillColor:col,fillOpacity:.07,clickable:false});return{remove(){c.setMap(null)},set(x,y,rr){c.setCenter({lat:x,lng:y});c.setRadius(rr)}}},
     onTap:cb=>m.addListener('click',ev=>ev.latLng&&cb(ev.latLng.lat(),ev.latLng.lng())),
     onLong:cb=>m.addListener('contextmenu',ev=>ev.latLng&&cb(ev.latLng.lat(),ev.latLng.lng())),
-    base:k=>{m.setMapTypeId({basic:'roadmap',sat:'hybrid',terrain:'terrain'}[k]||'roadmap');m.setOptions({styles:isDark()&&k!=='sat'?G_NIGHT:null})},
+    base:k=>{m.setMapTypeId({basic:'roadmap',sat:'hybrid',terrain:'terrain'}[k]||'roadmap');m.setOptions({styles:null})},
     destroy:()=>{try{G.event.clearInstanceListeners(m)}catch(e){}el.innerHTML='';el.removeAttribute('style')}
   };
 }
